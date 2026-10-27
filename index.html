@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b0b0b">
+    <meta name="description" content="Catch the Feast mini-game to reveal your exclusive Soofi Mandi offer.">
+    <title>A Special Treat — Soofi Mandi</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="apple-touch-icon" href="assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="page-wrap">
+      <!-- Brand Header -->
+      <header class="brand-header">
+        <img src="assets/logo.png" alt="Soofi Mandi — Yemeni Cuisine" class="brand-logo" width="130" height="90">
+      </header>
+
+      <!-- Headline & Subheading -->
+      <section class="hero-intro" aria-labelledby="headline">
+        <p class="subheading">JUST FOR YOU</p>
+        <h1 id="headline">A Special Treat</h1>
+      </section>
+
+      <!-- Main White Container (Catch the Feast Game & Offer Container) -->
+      <section class="white-container-wrap" aria-label="Catch the Feast game and offer container">
+        <!-- Outer Confetti Popper Layer (Outside white card on black background) -->
+        <div class="popper-layer" id="popper-layer" aria-hidden="true">
+          <div class="popper-origin popper-origin-left" id="popper-left"></div>
+          <div class="popper-origin popper-origin-right" id="popper-right"></div>
+        </div>
+
+        <div class="white-container" id="white-container">
+          <!-- VIEW 1: Game Introduction Screen -->
+          <div class="game-view game-view-intro is-active" id="view-intro">
+            <h2 class="game-title">CATCH THE FEAST</h2>
+            <p class="game-subtitle">Catch the falling food to unlock your special treat.</p>
+
+            <!-- Illustrated Mandi Bucket with Falling Delicacies -->
+            <div class="intro-illustration" aria-hidden="true">
+              <svg viewBox="0 0 170 120" width="160" height="112" class="intro-svg">
+                <defs>
+                  <linearGradient id="intro-bucket-gold" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#8F5600"/>
+                    <stop offset="25%" stop-color="#FFD666"/>
+                    <stop offset="55%" stop-color="#FFB900"/>
+                    <stop offset="85%" stop-color="#B87300"/>
+                    <stop offset="100%" stop-color="#5E3700"/>
+                  </linearGradient>
+                  <linearGradient id="intro-bucket-interior" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#1A0E02"/>
+                    <stop offset="100%" stop-color="#3D2405"/>
+                  </linearGradient>
+                  <linearGradient id="intro-drumstick-roast" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#D97706"/>
+                    <stop offset="50%" stop-color="#B45309"/>
+                    <stop offset="100%" stop-color="#78350F"/>
+                  </linearGradient>
+                  <filter id="intro-shadow" x="-20%" y="-20%" width="140%" height="150%">
+                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#180C00" flood-opacity="0.25"/>
+                  </filter>
+                </defs>
+
+                <!-- Floating Falling Food Items -->
+                <!-- Rice Bowl -->
+                <g class="float-item float-item-1" transform="translate(30, 8)">
+                  <ellipse cx="14" cy="18" rx="13" ry="6.5" fill="#FFFBEB" stroke="#D97706" stroke-width="1.2"/>
+                  <path d="M 1 18 Q 14 29 27 18 Z" fill="#F59E0B"/>
+                  <ellipse cx="14" cy="16" rx="10" ry="4.5" fill="#FEF3C7"/>
+                  <circle cx="10" cy="16" r="1.2" fill="#B45309"/>
+                  <circle cx="15" cy="15" r="1.2" fill="#B45309"/>
+                  <circle cx="18" cy="17" r="1" fill="#10B981"/>
+                </g>
+                <!-- Roasted Chicken Drumstick -->
+                <g class="float-item float-item-2" transform="translate(74, 4) rotate(-10)">
+                  <path d="M 12 10 C 6 14 4 22 9 27 C 14 32 22 32 26 26 C 30 20 28 12 21 8 Z" fill="url(#intro-drumstick-roast)"/>
+                  <rect x="23" y="25" width="5" height="10" rx="2" fill="#FDE68A" stroke="#D97706" stroke-width="0.8" transform="rotate(-35 25 30)"/>
+                  <circle cx="32" cy="33" r="2.6" fill="#FDE68A"/>
+                  <circle cx="35" cy="29" r="2.6" fill="#FDE68A"/>
+                </g>
+                <!-- Cardamom Garnish -->
+                <g class="float-item float-item-3" transform="translate(122, 12)">
+                  <path d="M 8 2 C 14 8 14 18 8 24 C 2 18 2 8 8 2 Z" fill="#10B981" stroke="#047857" stroke-width="1"/>
+                  <path d="M 8 4 L 8 22" stroke="#A7F3D0" stroke-width="0.8"/>
+                </g>
+
+                <!-- Handcrafted Mandi Bucket Illustration -->
+                <g class="intro-bucket-group" filter="url(#intro-shadow)" transform="translate(42, 54)">
+                  <!-- Drop shadow on floor -->
+                  <ellipse cx="43" cy="58" rx="34" ry="5" fill="rgba(0,0,0,0.12)"/>
+                  <!-- Bucket Tapered Body -->
+                  <path d="M 8 10 L 19 52 Q 43 58 67 52 L 78 10 Z" fill="url(#intro-bucket-gold)" stroke="#523200" stroke-width="1.2"/>
+                  <!-- Horizontal Embossed Bands -->
+                  <path d="M 12 24 Q 43 28 74 24" fill="none" stroke="#FFE799" stroke-width="1.6" opacity="0.8"/>
+                  <path d="M 15 38 Q 43 42 71 38" fill="none" stroke="#523200" stroke-width="1.2" opacity="0.6"/>
+                  <!-- Bucket Interior (Depth inside rim) -->
+                  <ellipse cx="43" cy="10" rx="35" ry="8" fill="url(#intro-bucket-interior)"/>
+                  <!-- Bucket Top Rim -->
+                  <ellipse cx="43" cy="10" rx="35" ry="8" fill="none" stroke="url(#intro-bucket-gold)" stroke-width="2.6"/>
+                  <ellipse cx="43" cy="9.5" rx="33" ry="6.5" fill="none" stroke="#FFF7D1" stroke-width="1" opacity="0.85"/>
+                  <!-- Left & Right Carry Handles -->
+                  <path d="M 7 14 C 1 14 0 22 6 24" fill="none" stroke="#FFD666" stroke-width="2.4" stroke-linecap="round"/>
+                  <path d="M 79 14 C 85 14 86 22 80 24" fill="none" stroke="#FFD666" stroke-width="2.4" stroke-linecap="round"/>
+                </g>
+              </svg>
+            </div>
+
+            <p class="game-instruction">Drag the bucket left and right to catch the falling food.</p>
+
+            <button type="button" class="btn-action btn-gold play-now-btn" id="play-now-btn" aria-label="Start Catch the Feast game">
+              <span>PLAY NOW</span>
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M6.3 3.8a1.2 1.2 0 0 0-1.8 1v10.4a1.2 1.2 0 0 0 1.8 1l8.5-5.2a1.2 1.2 0 0 0 0-2L6.3 3.8z"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- VIEW 2: Active Gameplay Screen -->
+          <div class="game-view game-view-playing" id="view-playing" aria-hidden="true">
+            <!-- Game HUD Status Bar -->
+            <div class="game-hud">
+              <div class="hud-pill hud-score" aria-label="Current score">
+                <span class="hud-label">SCORE</span>
+                <span class="hud-value"><span id="game-score" class="hud-score-num">0</span>/5</span>
+              </div>
+              <div class="hud-goal-wrap" aria-label="Target 5 catches">
+                <span class="hud-goal-text">TARGET: 5 CATCHES</span>
+                <div class="hud-progress-track">
+                  <div class="hud-progress-fill" id="game-progress-fill"></div>
+                </div>
+              </div>
+              <div class="hud-pill hud-timer" aria-label="Countdown timer">
+                <span class="hud-label">TIME</span>
+                <span class="hud-value" id="game-timer">12s</span>
+              </div>
+            </div>
+
+            <!-- Interactive Rectangular Playfield -->
+            <div class="game-play-area" id="game-play-area">
+              <!-- Falling Food Items Layer -->
+              <div class="falling-items-layer" id="falling-items-layer"></div>
+
+              <!-- Movable Mandi Bucket -->
+              <div class="player-bucket" id="player-bucket" role="slider" aria-label="Mandi Bucket" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
+                <svg viewBox="0 0 84 54" width="76" height="48" class="bucket-svg" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="bucket-gold-body" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#734400"/>
+                      <stop offset="22%" stop-color="#FFD666"/>
+                      <stop offset="50%" stop-color="#FFB900"/>
+                      <stop offset="80%" stop-color="#B87300"/>
+                      <stop offset="100%" stop-color="#472A00"/>
+                    </linearGradient>
+                    <linearGradient id="bucket-interior-glow" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#140A00"/>
+                      <stop offset="100%" stop-color="#3D2405"/>
+                    </linearGradient>
+                    <filter id="bucket-shadow" x="-20%" y="-20%" width="140%" height="150%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#120800" flood-opacity="0.38"/>
+                    </filter>
+                  </defs>
+                  <g filter="url(#bucket-shadow)">
+                    <!-- Bucket Base Shadow -->
+                    <ellipse cx="42" cy="50" rx="27" ry="3.5" fill="rgba(0,0,0,0.18)"/>
+                    <!-- Tapered Bucket Body -->
+                    <path d="M 8 11 L 18 47 Q 42 52 66 47 L 76 11 Z" fill="url(#bucket-gold-body)" stroke="#4A2B00" stroke-width="1"/>
+                    <!-- Horizontal Embossed Accent Rings -->
+                    <path d="M 12 23 Q 42 27 72 23" fill="none" stroke="#FFF0A8" stroke-width="1.3" opacity="0.8"/>
+                    <path d="M 15 36 Q 42 40 69 36" fill="none" stroke="#4A2B00" stroke-width="0.9" opacity="0.6"/>
+                    <!-- Bucket Cavity Interior -->
+                    <ellipse cx="42" cy="11" rx="34" ry="7.5" fill="url(#bucket-interior-glow)"/>
+                    <!-- Top Gold Rim -->
+                    <ellipse cx="42" cy="11" rx="34" ry="7.5" fill="none" stroke="url(#bucket-gold-body)" stroke-width="2.4"/>
+                    <ellipse cx="42" cy="10.5" rx="32" ry="6" fill="none" stroke="#FFF7D6" stroke-width="0.9" opacity="0.85"/>
+                    <!-- Side Handles -->
+                    <path d="M 7 14 C 2 14 1 20 6 22" fill="none" stroke="#FFD666" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 77 14 C 82 14 83 20 78 22" fill="none" stroke="#FFD666" stroke-width="2" stroke-linecap="round"/>
+                  </g>
+                </svg>
+              </div>
+
+              <!-- Subtle Drag Guide -->
+              <div class="bucket-drag-indicator" id="bucket-drag-indicator" aria-hidden="true">
+                <span>◀ DRAG BUCKET ▶</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW 3: Win Celebration Screen -->
+          <div class="game-view game-view-win" id="view-win" aria-hidden="true">
+            <div class="win-celebration-badge" aria-hidden="true">🏆</div>
+            <p class="game-kicker win-kicker">YOU CAUGHT THE FEAST!</p>
+            <h2 class="game-title win-title">YOUR SCORE: 5/5</h2>
+            <p class="game-subtitle win-subtitle">Unlocking your special treat...</p>
+            <div class="win-sparkle-ring" aria-hidden="true"></div>
+          </div>
+
+          <!-- VIEW 4: Lose / Try Again Screen -->
+          <div class="game-view game-view-lose" id="view-lose" aria-hidden="true">
+            <p class="game-kicker lose-kicker">TIME’S UP</p>
+            <h2 class="game-title lose-title">ALMOST THERE!</h2>
+            <p class="game-subtitle lose-score-display">YOUR SCORE: <strong id="lose-score-text">0</strong>/5</p>
+            <p class="lose-prompt">Try again to unlock your special treat.</p>
+            <button type="button" class="btn-action btn-gold btn-try-again" id="try-again-btn" aria-label="Try Catch the Feast again">
+              <span>TRY AGAIN</span>
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M10 3a7 7 0 1 0 6.95 6h-1.52A5.5 5.5 0 1 1 10 4.5c1.52 0 2.9.62 3.89 1.61L11.5 8.5H17V3l-2.05 2.05A6.98 6.98 0 0 0 10 3z"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- VIEW 5: Redesigned Restaurant Offer Reveal Screen -->
+          <article class="reward-card" id="reward-card" aria-live="polite" aria-hidden="true">
+            <div class="reward-shimmer" aria-hidden="true"></div>
+
+            <!-- Top Celebration Section -->
+            <div class="reward-top-section">
+              <div class="reward-sparkle-icon" aria-hidden="true">
+                <svg viewBox="0 0 28 28" width="30" height="30" fill="none">
+                  <path d="M14 2L16.4 9.6L24 12L16.4 14.4L14 22L11.6 14.4L4 12L11.6 9.6L14 2Z" fill="url(#sparkle-gold-grad)"/>
+                  <path d="M21.5 19.5L22.8 22.2L25.5 23.5L22.8 24.8L21.5 27.5L20.2 24.8L17.5 23.5L20.2 22.2L21.5 19.5Z" fill="#FFC83B"/>
+                  <circle cx="6.5" cy="20.5" r="1.5" fill="#FFE082"/>
+                  <defs>
+                    <linearGradient id="sparkle-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#FFF4C2"/>
+                      <stop offset="45%" stop-color="#FFB900"/>
+                      <stop offset="100%" stop-color="#C27D00"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              <h2 class="reward-congrats-title">CONGRATULATIONS!</h2>
+              <p class="reward-congrats-sub">You caught the feast!</p>
+            </div>
+
+            <!-- Prominent Gold-Outlined Reward Card Panel -->
+            <div class="reward-featured-panel">
+              <div class="reward-panel-sweep" aria-hidden="true"></div>
+              <div class="reward-panel-watermark" aria-hidden="true"></div>
+              <span class="reward-panel-badge">YOUR SPECIAL OFFER</span>
+              <h3 class="reward-panel-title" id="offer-title">Demo offer · To be confirmed</h3>
+              <p class="reward-panel-desc" id="offer-description">Special promotion details will be updated soon.</p>
+            </div>
+
+            <!-- Understated Brand Section -->
+            <div class="reward-brand-section">
+              <img src="assets/logo.png" alt="" class="reward-mini-logo" width="40" height="28" aria-hidden="true">
+              <span class="reward-brand-text">SOOFI MANDI <span class="reward-brand-dot">·</span> YEMENI CUISINE</span>
+            </div>
+          </article>
+        </div>
+
+        <!-- Discreet Reset Demo Control (Centered Below Card) -->
+        <div class="reset-wrap">
+          <button type="button" class="reset-demo-btn" id="reset-btn" aria-label="Reset demo and return to start">
+            <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor" aria-hidden="true">
+              <path d="M10 3a7 7 0 1 0 6.95 6h-1.52A5.5 5.5 0 1 1 10 4.5c1.52 0 2.9.62 3.89 1.61L11.5 8.5H17V3l-2.05 2.05A6.98 6.98 0 0 0 10 3z"/>
+            </svg>
+            <span>Reset demo</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Footer Note -->
+      <footer class="footer-note">
+        SOOFI MANDI <span aria-hidden="true">·</span> MADE TO BE SHARED
+      </footer>
+    </main>
+
+    <script src="offers.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
