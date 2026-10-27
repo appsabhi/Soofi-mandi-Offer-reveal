@@ -1,56 +1,57 @@
 (() => {
   "use strict";
 
-  // DOM Containers & Views
+  // =========================================================================
+  // DOM CONTAINERS & VIEWS
+  // =========================================================================
   const container = document.getElementById("white-container");
   const viewIntro = document.getElementById("view-intro");
   const viewPlaying = document.getElementById("view-playing");
-  const viewWin = document.getElementById("view-win");
-  const viewLose = document.getElementById("view-lose");
+  const viewResults = document.getElementById("view-results");
   const rewardCard = document.getElementById("reward-card");
 
   // Game UI & HUD Elements
   const playNowBtn = document.getElementById("play-now-btn");
-  const tryAgainBtn = document.getElementById("try-again-btn");
+  const playAgainBtn = document.getElementById("play-again-btn");
+  const resetBtn = document.getElementById("reset-btn");
   const gameTimerEl = document.getElementById("game-timer");
   const gameScoreEl = document.getElementById("game-score");
-  const gameProgressFill = document.getElementById("game-progress-fill");
   const gamePlayArea = document.getElementById("game-play-area");
   const fallingItemsLayer = document.getElementById("falling-items-layer");
   const playerBucket = document.getElementById("player-bucket");
   const bucketDragIndicator = document.getElementById("bucket-drag-indicator");
-  const loseScoreText = document.getElementById("lose-score-text");
 
-  // Offer Details
+  // Results & Offer Display Elements
+  const interstitialScoreVal = document.getElementById("interstitial-score-val");
+  const interstitialScoreDesc = document.getElementById("interstitial-score-desc");
+  const rewardScoreNumber = document.getElementById("reward-score-number");
+  const rewardScoreSummary = document.getElementById("reward-score-summary");
   const offerTitle = document.getElementById("offer-title");
   const offerDescription = document.getElementById("offer-description");
-  const offerCode = document.getElementById("offer-code");
-  const offerTerms = document.getElementById("offer-terms");
 
-  // Controls & External Poppers
-  const resetBtn = document.getElementById("reset-btn");
-  const popperLeft = document.getElementById("popper-left");
-  const popperRight = document.getElementById("popper-right");
+  // Full-Screen Confetti Celebration Overlay
+  const fullscreenConfettiOverlay = document.getElementById("fullscreen-confetti-overlay");
 
   // Demo Offers Configuration
   const demoOffers = window.SOOFI_MANDI_DEMO_OFFERS || window.SOOfiMandiOffers || [];
   let currentOffer = null;
 
   // Game Parameters
-  const TARGET_SCORE = 5;
   const GAME_DURATION = 12.0; // 12 seconds round
 
-  // Game Runtime State
-  let gameState = "intro"; // "intro" | "playing" | "won" | "lost" | "revealed"
+  // Game Runtime State (Unlimited scoring, round ends strictly on timer expiry)
+  let gameState = "intro"; // "intro" | "playing" | "results" | "revealed"
   let timeLeft = GAME_DURATION;
   let score = 0;
   let gameAnimId = null;
   let lastFrameTime = 0;
   let spawnCooldown = 0;
   let fallingItems = [];
+  let confettiCleanupTimer = null;
 
   // Bucket Physics State
   let bucketX = 0; // Horizontal center of bucket relative to play area
+  let lastBucketX = 0;
   let isDraggingBucket = false;
   let hasMovedBucket = false;
 
@@ -67,7 +68,7 @@
    */
   const FOOD_CONFIG = [
     {
-      id: "chicken-drumstick",
+      id: "roasted-chicken",
       name: "Roasted Chicken",
       image: "", // Configure real image path here (e.g. "assets/food-chicken.png")
       fallbackSvg: `<svg viewBox="0 0 36 36"><defs><linearGradient id="g-roast" x1="0%" y1="0%" x2="1" y2="1"><stop offset="0%" stop-color="#E07A00"/><stop offset="50%" stop-color="#B84D00"/><stop offset="100%" stop-color="#6E2B00"/></linearGradient></defs><g transform="translate(3,3)"><path d="M 10 9 C 4 13 2 20 6 25 C 10 30 18 30 22 24 C 26 18 24 11 18 8 Z" fill="url(#g-roast)"/><rect x="19" y="23" width="4" height="9" rx="1.5" fill="#FDE68A" stroke="#B84D00" stroke-width="0.6" transform="rotate(-30 21 27)"/><circle cx="26" cy="30" r="2.2" fill="#FDE68A"/><circle cx="29" cy="27" r="2.2" fill="#FDE68A"/></g></svg>`
@@ -119,21 +120,17 @@
   function applyOfferContent() {
     currentOffer = demoOffers[0] || {
       title: "Demo offer · To be confirmed",
-      description: "Special promotion terms will be updated upon client confirmation.",
-      code: "SOOFI-MANDI",
-      terms: "Demo presentation · Terms to be confirmed"
+      description: "Special promotion details will be updated soon."
     };
 
     if (offerTitle) offerTitle.textContent = currentOffer.title;
     if (offerDescription) offerDescription.textContent = currentOffer.description;
-    if (offerCode) offerCode.textContent = currentOffer.code;
-    if (offerTerms) offerTerms.textContent = currentOffer.terms;
   }
   applyOfferContent();
 
   // Switch between clean game views inside the white container
   function switchView(targetView) {
-    const allViews = [viewIntro, viewPlaying, viewWin, viewLose];
+    const allViews = [viewIntro, viewPlaying, viewResults];
     allViews.forEach((v) => {
       if (v) {
         v.classList.remove("is-active");
@@ -153,7 +150,21 @@
     const rect = gamePlayArea.getBoundingClientRect();
     const halfWidth = playerBucket.offsetWidth / 2 || 38;
     const rawX = clientX - rect.left;
-    bucketX = Math.max(halfWidth + 4, Math.min(rect.width - halfWidth - 4, rawX));
+    const newX = Math.max(halfWidth + 4, Math.min(rect.width - halfWidth - 4, rawX));
+
+    // Tilt bucket slightly in direction of movement
+    const dx = newX - bucketX;
+    if (dx > 2) {
+      playerBucket.classList.remove("is-moving-left");
+      playerBucket.classList.add("is-moving-right");
+    } else if (dx < -2) {
+      playerBucket.classList.remove("is-moving-right");
+      playerBucket.classList.add("is-moving-left");
+    } else {
+      playerBucket.classList.remove("is-moving-left", "is-moving-right");
+    }
+
+    bucketX = newX;
     playerBucket.style.left = `${bucketX}px`;
 
     if (!hasMovedBucket && bucketDragIndicator) {
@@ -166,7 +177,9 @@
     if (!gamePlayArea || !playerBucket) return;
     const rect = gamePlayArea.getBoundingClientRect();
     bucketX = rect.width / 2;
+    lastBucketX = bucketX;
     playerBucket.style.left = `${bucketX}px`;
+    playerBucket.classList.remove("is-moving-left", "is-moving-right");
   }
 
   // Spawn a Falling Food Item
@@ -184,8 +197,8 @@
     const maxX = Math.max(minX + 20, rect.width - itemWidth - 14);
     const startX = minX + Math.random() * (maxX - minX);
 
-    // Varied fall speed: 135px/s to 190px/s
-    const speed = 135 + Math.random() * 55;
+    // Varied fall speed: 155px/s to 215px/s
+    const speed = 155 + Math.random() * 60;
     const rotSpeed = (Math.random() - 0.5) * 60;
 
     const el = createFoodElement(foodConfig);
@@ -210,18 +223,12 @@
     item.caught = true;
     score++;
 
-    // Update Score on HUD with subtle pop effect
+    // Update Live Score on HUD immediately with pop effect
     if (gameScoreEl) {
       gameScoreEl.textContent = score;
       gameScoreEl.classList.remove("pop");
-      void gameScoreEl.offsetWidth; // Trigger reflow for animation restart
+      void gameScoreEl.offsetWidth; // Reflow for restart
       gameScoreEl.classList.add("pop");
-    }
-
-    // Update Progress Bar
-    if (gameProgressFill) {
-      const pct = Math.min(100, (score / TARGET_SCORE) * 100);
-      gameProgressFill.style.width = `${pct}%`;
     }
 
     // Trigger visual pop on the caught food item
@@ -245,11 +252,6 @@
     }, 350);
 
     fallingItems.splice(index, 1);
-
-    // Check Win Condition: 5 catches
-    if (score >= TARGET_SCORE) {
-      handleWin();
-    }
   }
 
   // Clear all falling items from the DOM
@@ -273,16 +275,16 @@
     if (timeLeft <= 0) {
       timeLeft = 0;
       updateTimerDisplay();
-      handleLose();
+      endGameRound();
       return;
     }
     updateTimerDisplay();
 
-    // Spawn food items at comfortable pacing (every 0.65s - 0.85s)
+    // Spawn food items continuously across the 12-second round (every ~0.48s - 0.65s)
     spawnCooldown -= dt;
     if (spawnCooldown <= 0) {
       spawnFoodItem();
-      spawnCooldown = 0.65 + Math.random() * 0.2;
+      spawnCooldown = 0.48 + Math.random() * 0.18;
     }
 
     // Update falling items & collision detection
@@ -290,7 +292,6 @@
     const bucketHalf = isMobile ? 33 : 38;
     const areaRect = gamePlayArea.getBoundingClientRect();
     const areaHeight = areaRect.height || 290;
-    // Top rim of the bucket where food drops in
     const bucketTop = areaHeight - (isMobile ? 48 : 54);
     const bucketCatchZoneBottom = bucketTop + 24;
     const bucketLeft = bucketX - bucketHalf;
@@ -315,7 +316,6 @@
         itemCenter <= bucketRight + 10
       ) {
         handleCatch(item, i);
-        if (gameState !== "playing") return; // Win triggered
         continue;
       }
 
@@ -342,7 +342,7 @@
     }
   }
 
-  // Start / Restart Catch the Mandi game
+  // Start / Restart Catch the Feast game
   function startGame() {
     // Cancel previous animations or timers
     if (gameAnimId) {
@@ -360,9 +360,12 @@
     lastFrameTime = 0;
     hasMovedBucket = false;
 
+    // Reset Container & Reward Card State
+    container.classList.remove("is-revealed");
+    rewardCard.setAttribute("aria-hidden", "true");
+
     // Reset HUD
     if (gameScoreEl) gameScoreEl.textContent = "0";
-    if (gameProgressFill) gameProgressFill.style.width = "0%";
     if (bucketDragIndicator) bucketDragIndicator.classList.remove("is-hidden");
     updateTimerDisplay();
 
@@ -374,9 +377,9 @@
     gameAnimId = requestAnimationFrame(gameLoop);
   }
 
-  // Handle Win State (Caught 5 items within 12 seconds)
-  function handleWin() {
-    gameState = "won";
+  // End of Round: Triggered strictly when 12-second countdown expires
+  function endGameRound() {
+    gameState = "results";
     if (gameAnimId) {
       cancelAnimationFrame(gameAnimId);
       gameAnimId = null;
@@ -384,133 +387,214 @@
 
     clearFallingItems();
 
-    // 1. Show celebratory Win screen (YOU CAUGHT THE MANDI! YOUR SCORE: 5/5)
-    switchView(viewWin);
+    // Preserve the actual final score
+    const finalScore = score;
+    const scoreSummaryText = finalScore === 1 ? "You caught 1 food item!" : `You caught ${finalScore} food items!`;
 
-    // 2. Trigger outer gold and white confetti popper burst on black background
-    triggerOuterPoppers();
+    // 1. Update Results Interstitial Screen
+    if (interstitialScoreVal) interstitialScoreVal.textContent = String(finalScore);
+    if (interstitialScoreDesc) interstitialScoreDesc.textContent = scoreSummaryText;
 
-    // 3. Smoothly transition directly into the Offer Reveal
+    // 2. Update Reward Card Score Section
+    if (rewardScoreNumber) rewardScoreNumber.textContent = String(finalScore);
+    if (rewardScoreSummary) rewardScoreSummary.textContent = scoreSummaryText;
+
+    // 3. Show brief celebratory interstitial results screen
+    switchView(viewResults);
+
+    // 4. Trigger Full-Screen Confetti Celebration (In front of card & viewport)
+    triggerFullScreenConfetti();
+
+    // 5. Smoothly transition to the prominent Offer Reveal Screen
     setTimeout(() => {
-      if (gameState !== "won") return;
+      if (gameState !== "results") return;
       gameState = "revealed";
 
-      // Directly reveal the offer card with smooth 3D flip / shimmer
       container.classList.add("is-revealed");
       rewardCard.setAttribute("aria-hidden", "false");
-
-      // Second celebratory popper burst to accent the offer reveal
-      triggerOuterPoppers();
-    }, 1250);
+    }, 1150);
   }
 
-  // Handle Lose State (Timer expired before 5 catches)
-  function handleLose() {
-    gameState = "lost";
-    if (gameAnimId) {
-      cancelAnimationFrame(gameAnimId);
-      gameAnimId = null;
-    }
-    clearFallingItems();
+  /**
+   * =========================================================================
+   * FULL-SCREEN CONFETTI CELEBRATION OVERLAY
+   * Renders particles across the full viewport, passing visibly IN FRONT of the card!
+   * =========================================================================
+   */
+  function triggerFullScreenConfetti() {
+    if (!fullscreenConfettiOverlay) return;
 
-    // Show Lose Screen with actual score
-    if (loseScoreText) {
-      loseScoreText.textContent = String(score);
-    }
-    // Offer strictly remains hidden
-    container.classList.remove("is-revealed");
-    rewardCard.setAttribute("aria-hidden", "true");
-
-    switchView(viewLose);
-  }
-
-  // Outer background confetti popper burst (Shoots outward and upward into black background)
-  function triggerOuterPoppers() {
-    if (!popperLeft || !popperRight) return;
-
-    popperLeft.innerHTML = "";
-    popperRight.innerHTML = "";
+    stopConfetti();
 
     const goldWhitePalette = [
       "#FFB900",
       "#FFC83B",
-      "#FFE28A",
+      "#FFE58F",
       "#FFFFFF",
       "#FFF8E7",
-      "#D49200",
+      "#E5A700",
       "#FFF1B8"
     ];
 
-    const isMobile = window.innerWidth < 500;
-    const count = isMobile ? 22 : 32;
+    const isMobile = window.innerWidth < 480;
+    const cascadeCount = isMobile ? 32 : 54;
+    const cannonCount = isMobile ? 14 : 22;
+    const burstCount = isMobile ? 10 : 16;
 
-    function spawnPiece(originEl, isLeft) {
+    // 1. Top Cascading Shower (Visibly falls directly in front of the white card)
+    for (let i = 0; i < cascadeCount; i++) {
       const piece = document.createElement("div");
-      piece.className = "confetti-piece";
+      piece.className = "confetti-particle";
 
       const color = goldWhitePalette[Math.floor(Math.random() * goldWhitePalette.length)];
       piece.style.backgroundColor = color;
-      piece.style.boxShadow = `0 1px 4px ${color}55`;
+      piece.style.boxShadow = `0 1px 4px ${color}66`;
 
-      const typeRand = Math.random();
-      if (typeRand < 0.6) {
-        const w = 5 + Math.random() * 3.5;
-        const h = 9 + Math.random() * 7;
-        piece.style.width = `${w}px`;
-        piece.style.height = `${h}px`;
-        piece.style.borderRadius = "1px";
-      } else if (typeRand < 0.85) {
-        const s = 5 + Math.random() * 3;
+      // Varied shapes: strips, squares, circles
+      const shapeRand = Math.random();
+      if (shapeRand < 0.55) {
+        piece.style.width = `${6 + Math.random() * 4}px`;
+        piece.style.height = `${11 + Math.random() * 8}px`;
+        piece.style.borderRadius = "1.5px";
+      } else if (shapeRand < 0.8) {
+        const s = 6 + Math.random() * 4;
         piece.style.width = `${s}px`;
         piece.style.height = `${s}px`;
-        piece.style.borderRadius = "1.5px";
+        piece.style.borderRadius = "2px";
       } else {
-        const d = 5.5 + Math.random() * 3;
+        const d = 6 + Math.random() * 3.5;
         piece.style.width = `${d}px`;
         piece.style.height = `${d}px`;
         piece.style.borderRadius = "50%";
       }
 
-      const minDx = isMobile ? 8 : 40;
-      const maxDx = isMobile ? 22 : 160;
-      const dxVal = minDx + Math.random() * (maxDx - minDx);
-      const dx = isLeft ? -dxVal : dxVal;
+      const xStart = 4 + Math.random() * 92; // 4vw to 96vw
+      const lateralDrift = (Math.random() - 0.5) * (isMobile ? 60 : 140);
+      const rotX = (Math.random() - 0.5) * 1440;
+      const rotY = (Math.random() - 0.5) * 1440;
+      const rotZ = (Math.random() - 0.5) * 720;
 
-      const apexY = -(isMobile ? 80 + Math.random() * 90 : 85 + Math.random() * 140);
-      const fallY = isMobile ? 35 + Math.random() * 75 : 35 + Math.random() * 125;
-      const rot = (isLeft ? -1 : 1) * (260 + Math.random() * 540);
+      piece.style.setProperty("--x-start", `${xStart}vw`);
+      piece.style.setProperty("--x-end", `calc(${xStart}vw + ${lateralDrift}px)`);
+      piece.style.setProperty("--rot-x", `${rotX}deg`);
+      piece.style.setProperty("--rot-y", `${rotY}deg`);
+      piece.style.setProperty("--rot-z", `${rotZ}deg`);
+
+      const duration = 2.4 + Math.random() * 1.1;
+      const delay = Math.random() * 0.75;
+
+      piece.style.animationName = "confetti-cascade";
+      piece.style.animationDuration = `${duration}s`;
+      piece.style.animationDelay = `${delay}s`;
+      piece.style.animationTimingFunction = "cubic-bezier(0.22, 0.7, 0.35, 1)";
+
+      fullscreenConfettiOverlay.appendChild(piece);
+    }
+
+    // 2. Left & Right Cannon Blasts (Shooting up & across the screen)
+    for (let i = 0; i < cannonCount; i++) {
+      spawnCannonPiece(true);
+      spawnCannonPiece(false);
+    }
+
+    function spawnCannonPiece(isLeft) {
+      const piece = document.createElement("div");
+      piece.className = "confetti-particle";
+
+      const color = goldWhitePalette[Math.floor(Math.random() * goldWhitePalette.length)];
+      piece.style.backgroundColor = color;
+      piece.style.boxShadow = `0 1px 4px ${color}66`;
+
+      const w = 6 + Math.random() * 3.5;
+      const h = 10 + Math.random() * 7;
+      piece.style.width = `${w}px`;
+      piece.style.height = `${h}px`;
+      piece.style.borderRadius = "1.5px";
+
+      piece.style.left = isLeft ? "0px" : "100vw";
+      piece.style.top = isMobile ? "75vh" : "70vh";
+
+      const minDx = isMobile ? 80 : 160;
+      const maxDx = isMobile ? 240 : 540;
+      const dxVal = minDx + Math.random() * (maxDx - minDx);
+      const dx = isLeft ? dxVal : -dxVal;
+
+      const apexY = -(isMobile ? 180 + Math.random() * 140 : 260 + Math.random() * 260);
+      const fallY = isMobile ? 80 + Math.random() * 120 : 100 + Math.random() * 180;
+      const rot = (isLeft ? 1 : -1) * (360 + Math.random() * 720);
 
       piece.style.setProperty("--dx", `${dx}px`);
       piece.style.setProperty("--apex-y", `${apexY}px`);
       piece.style.setProperty("--fall-y", `${fallY}px`);
       piece.style.setProperty("--rot", `${rot}deg`);
 
-      const duration = 2.2 + Math.random() * 0.8;
-      const delay = Math.random() * 0.16;
+      const duration = 2.5 + Math.random() * 0.9;
+      const delay = Math.random() * 0.22;
 
-      piece.style.animationName = isLeft ? "popper-left-burst" : "popper-right-burst";
+      piece.style.animationName = isLeft ? "confetti-cannon-left" : "confetti-cannon-right";
       piece.style.animationDuration = `${duration}s`;
       piece.style.animationDelay = `${delay}s`;
+      piece.style.animationTimingFunction = "cubic-bezier(0.15, 0.85, 0.3, 1)";
 
-      originEl.appendChild(piece);
-
-      setTimeout(() => {
-        piece.remove();
-      }, (duration + delay) * 1000 + 150);
+      fullscreenConfettiOverlay.appendChild(piece);
     }
 
-    for (let i = 0; i < count; i++) {
-      spawnPiece(popperLeft, true);
-      spawnPiece(popperRight, false);
+    // 3. Center Burst (Explodes from card area outwards)
+    for (let i = 0; i < burstCount; i++) {
+      const piece = document.createElement("div");
+      piece.className = "confetti-particle";
+
+      const color = goldWhitePalette[Math.floor(Math.random() * goldWhitePalette.length)];
+      piece.style.backgroundColor = color;
+      piece.style.boxShadow = `0 1px 4px ${color}66`;
+
+      const s = 6 + Math.random() * 3.5;
+      piece.style.width = `${s}px`;
+      piece.style.height = `${s}px`;
+      piece.style.borderRadius = Math.random() > 0.4 ? "2px" : "50%";
+
+      const cx = 50; // 50vw
+      const cy = isMobile ? 48 : 46; // vh
+      const angle = Math.random() * Math.PI * 2;
+      const distance = (isMobile ? 70 : 160) + Math.random() * (isMobile ? 80 : 180);
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance - 40; // bias upward
+      const rot = (Math.random() - 0.5) * 720;
+
+      piece.style.setProperty("--cx", `${cx}vw`);
+      piece.style.setProperty("--cy", `${cy}vh`);
+      piece.style.setProperty("--dx", `${dx}px`);
+      piece.style.setProperty("--dy", `${dy}px`);
+      piece.style.setProperty("--rot", `${rot}deg`);
+
+      const duration = 2.2 + Math.random() * 0.8;
+      const delay = Math.random() * 0.15;
+
+      piece.style.animationName = "confetti-burst-radial";
+      piece.style.animationDuration = `${duration}s`;
+      piece.style.animationDelay = `${delay}s`;
+      piece.style.animationTimingFunction = "cubic-bezier(0.15, 0.8, 0.3, 1)";
+
+      fullscreenConfettiOverlay.appendChild(piece);
     }
+
+    // Self-cleanup after animation completes
+    confettiCleanupTimer = setTimeout(() => {
+      stopConfetti();
+    }, 4500);
   }
 
   function stopConfetti() {
-    if (popperLeft) popperLeft.innerHTML = "";
-    if (popperRight) popperRight.innerHTML = "";
+    if (confettiCleanupTimer) {
+      clearTimeout(confettiCleanupTimer);
+      confettiCleanupTimer = null;
+    }
+    if (fullscreenConfettiOverlay) {
+      fullscreenConfettiOverlay.innerHTML = "";
+    }
   }
 
-  // Full Demo Reset
+  // Full Demo Reset: returns cleanly to Intro Screen
   function resetDemo() {
     if (gameAnimId) {
       cancelAnimationFrame(gameAnimId);
@@ -523,8 +607,10 @@
     container.classList.remove("is-revealed");
     rewardCard.setAttribute("aria-hidden", "true");
 
+    score = 0;
+    timeLeft = GAME_DURATION;
+
     if (gameScoreEl) gameScoreEl.textContent = "0";
-    if (gameProgressFill) gameProgressFill.style.width = "0%";
     if (gameTimerEl) {
       gameTimerEl.textContent = "12s";
       gameTimerEl.parentElement.classList.remove("is-warning");
@@ -554,6 +640,9 @@
 
     const stopDraggingBucket = (event) => {
       isDraggingBucket = false;
+      if (playerBucket) {
+        playerBucket.classList.remove("is-moving-left", "is-moving-right");
+      }
       try {
         if (gamePlayArea.hasPointerCapture(event.pointerId)) {
           gamePlayArea.releasePointerCapture(event.pointerId);
@@ -575,12 +664,24 @@
         event.preventDefault();
         bucketX = Math.max(halfWidth + 4, bucketX - step);
         playerBucket.style.left = `${bucketX}px`;
+        playerBucket.classList.remove("is-moving-right");
+        playerBucket.classList.add("is-moving-left");
         if (bucketDragIndicator) bucketDragIndicator.classList.add("is-hidden");
       } else if (event.key === "ArrowRight") {
         event.preventDefault();
         bucketX = Math.min(rect.width - halfWidth - 4, bucketX + step);
         playerBucket.style.left = `${bucketX}px`;
+        playerBucket.classList.remove("is-moving-left");
+        playerBucket.classList.add("is-moving-right");
         if (bucketDragIndicator) bucketDragIndicator.classList.add("is-hidden");
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        if (playerBucket) {
+          playerBucket.classList.remove("is-moving-left", "is-moving-right");
+        }
       }
     });
   }
@@ -590,8 +691,8 @@
     playNowBtn.addEventListener("click", startGame);
   }
 
-  if (tryAgainBtn) {
-    tryAgainBtn.addEventListener("click", startGame);
+  if (playAgainBtn) {
+    playAgainBtn.addEventListener("click", startGame);
   }
 
   if (resetBtn) {

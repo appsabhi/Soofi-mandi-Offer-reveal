@@ -9,9 +9,8 @@
   --charcoal-secondary: #524e46;
   --text-light: #ffffff;
   --text-ivory: #f5f2eb;
-  --text-muted: #8c877d;
-  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
-  --sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sans: "Poppins", Arial, sans-serif;
+  --font-family: "Poppins", Arial, sans-serif;
 }
 
 * {
@@ -76,6 +75,7 @@ body {
 .subheading {
   margin: 0 0 10px;
   color: var(--gold);
+  font-family: var(--sans);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.24em;
@@ -85,10 +85,10 @@ body {
 h1 {
   margin: 0;
   color: var(--text-light);
-  font-family: var(--serif);
-  font-size: clamp(36px, 7.2vw, 54px);
-  font-weight: 500;
-  line-height: 1.1;
+  font-family: var(--sans);
+  font-size: clamp(32px, 6.5vw, 48px);
+  font-weight: 700;
+  line-height: 1.15;
   letter-spacing: -0.02em;
 }
 
@@ -123,7 +123,7 @@ h1 {
   font-family: var(--sans);
 }
 
-/* Catch the Mandi Views Inside White Container */
+/* Game Views Inside White Container */
 .game-view {
   display: none;
   width: 100%;
@@ -239,7 +239,7 @@ h1 {
   outline-offset: 3px;
 }
 
-/* Playing HUD */
+/* Playing HUD (Score & Timer Prominently Displayed Without Target Progress) */
 .game-view-playing {
   width: 100%;
 }
@@ -249,7 +249,7 @@ h1 {
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
@@ -258,52 +258,52 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 6px 16px;
   background: #F7F5EE;
-  border: 1px solid rgba(255, 185, 0, 0.4);
-  border-radius: 18px;
+  border: 1px solid rgba(255, 185, 0, 0.45);
+  border-radius: 20px;
   font-family: var(--sans);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--charcoal);
   user-select: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .hud-label {
   color: #8C7F6B;
-  font-size: 10px;
+  font-size: 10.5px;
   letter-spacing: 0.14em;
   font-weight: 700;
 }
 
 .hud-value {
   font-family: var(--sans);
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 800;
   letter-spacing: 0.02em;
   color: #1C1A17;
 }
 
-.hud-score-num {
+.hud-score {
+  color: #2D2310;
+}
+
+.hud-score .hud-value {
   color: #B87300;
   display: inline-block;
   transition: transform 0.15s cubic-bezier(0.18, 0.85, 0.3, 1);
 }
 
-.hud-score-num.pop {
+.hud-score .hud-value.pop {
   animation: score-num-pop 0.3s cubic-bezier(0.18, 0.85, 0.3, 1);
 }
 
 @keyframes score-num-pop {
   0% { transform: scale(1); }
-  50% { transform: scale(1.4); color: #E59800; }
+  50% { transform: scale(1.35); color: #E59800; }
   100% { transform: scale(1); }
 }
 
 .hud-timer {
-  min-width: 78px;
-  color: #8c5900;
+  color: #8C5900;
 }
 
 .hud-timer.is-warning {
@@ -313,48 +313,13 @@ h1 {
   animation: timer-pulse 0.6s infinite alternate;
 }
 
+.hud-timer.is-warning .hud-value {
+  color: #CF1322;
+}
+
 @keyframes timer-pulse {
   from { transform: scale(1); }
   to { transform: scale(1.06); }
-}
-
-.hud-goal-wrap {
-  flex: 1;
-  max-width: 170px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.hud-goal-text {
-  font-family: var(--sans);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: #8c7f6b;
-  text-transform: uppercase;
-}
-
-.hud-progress-track {
-  width: 100%;
-  height: 6px;
-  background: #ECE7DA;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.hud-progress-fill {
-  width: 0%;
-  height: 100%;
-  background: linear-gradient(90deg, #FFC83B, #FFB900);
-  border-radius: 3px;
-  transition: width 0.25s cubic-bezier(0.2, 0.8, 0.25, 1);
-}
-
-.hud-score {
-  min-width: 78px;
-  color: #2D2310;
 }
 
 /* Play Area */
@@ -387,7 +352,7 @@ h1 {
   overflow: hidden;
 }
 
-/* Falling Item Elements */
+/* Falling Food Item Elements */
 .falling-food-item {
   position: absolute;
   top: 0;
@@ -456,19 +421,27 @@ h1 {
   position: absolute;
   bottom: 8px;
   left: 50%;
+  transform: translateX(-50%);
   width: 76px;
   height: 48px;
-  transform: translateX(-50%);
   pointer-events: none;
-  will-change: transform;
-  transition: transform 0.03s ease-out;
+  will-change: left;
   z-index: 5;
+  transition: transform 0.08s ease-out;
+}
+
+.player-bucket.is-moving-left {
+  transform: translateX(-50%) rotate(-4deg);
+}
+
+.player-bucket.is-moving-right {
+  transform: translateX(-50%) rotate(4deg);
 }
 
 .bucket-svg {
   width: 100%;
   height: 100%;
-  overflow: visible;
+  display: block;
 }
 
 .bucket-drag-indicator {
@@ -476,43 +449,35 @@ h1 {
   bottom: 60px;
   left: 50%;
   transform: translateX(-50%);
-  color: #B3A58E;
+  color: #9c8e76;
   font-family: var(--sans);
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  opacity: 0.65;
+  letter-spacing: 0.16em;
+  opacity: 0.85;
   pointer-events: none;
-  animation: pulse-guide 2s ease-in-out infinite;
+  user-select: none;
+  transition: opacity 0.3s ease;
+  animation: indicator-pulse 2s ease-in-out infinite alternate;
 }
 
-@keyframes pulse-guide {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.75; }
+@keyframes indicator-pulse {
+  from { opacity: 0.45; transform: translateX(-50%) scale(0.96); }
+  to { opacity: 0.95; transform: translateX(-50%) scale(1.02); }
 }
 
 .bucket-drag-indicator.is-hidden {
-  display: none;
+  opacity: 0;
 }
 
-/* Future Real Food Photography Support */
-.falling-food-item .food-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Win & Lose Screen Views */
-.game-view-win {
+/* VIEW 3: Results Interstitial Screen (Celebratory Flash when 12s ends) */
+.game-view-results {
   padding: 24px 16px 20px;
-  animation: win-zoom-in 0.45s cubic-bezier(0.18, 0.85, 0.32, 1) forwards;
+  animation: results-zoom-in 0.4s cubic-bezier(0.18, 0.85, 0.32, 1) forwards;
   position: relative;
 }
 
-@keyframes win-zoom-in {
+@keyframes results-zoom-in {
   from {
     opacity: 0;
     transform: scale(0.92);
@@ -523,8 +488,8 @@ h1 {
   }
 }
 
-.win-celebration-badge {
-  font-size: 36px;
+.results-badge {
+  font-size: 38px;
   margin-bottom: 8px;
   filter: drop-shadow(0 4px 12px rgba(255, 185, 0, 0.45));
   animation: badge-bounce 1s cubic-bezier(0.18, 0.85, 0.3, 1) infinite alternate;
@@ -535,13 +500,17 @@ h1 {
   to { transform: translateY(-5px) scale(1.06); }
 }
 
-.win-kicker {
-  color: #A37200;
+.results-kicker {
+  color: #B45309;
+  font-family: var(--sans);
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin: 0 0 4px;
 }
 
-.win-title {
+.results-title {
   color: #1C1917;
   font-family: var(--sans);
   font-weight: 800;
@@ -552,53 +521,13 @@ h1 {
   -webkit-text-fill-color: transparent;
 }
 
-.win-subtitle {
+.results-subtitle {
   max-width: 360px;
   color: #524E46;
+  font-family: var(--sans);
   font-size: 13.5px;
   font-weight: 500;
-}
-
-/* Lose Screen */
-.game-view-lose {
-  padding: 26px 16px 22px;
-}
-
-.lose-kicker {
-  color: #B45309;
-}
-
-.lose-title {
-  color: var(--charcoal);
-  font-family: var(--sans);
-  font-size: clamp(23px, 5vw, 29px);
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
-.lose-score-display {
-  font-family: var(--sans);
-  font-size: 15px;
-  font-weight: 700;
-  color: #1C1917;
-  margin: 0 0 6px;
-  letter-spacing: 0.05em;
-}
-
-.lose-score-display strong {
-  color: #D97706;
-  font-size: 18px;
-}
-
-.lose-prompt {
-  color: #736D60;
-  font-family: var(--sans);
-  font-size: 13px;
-  margin: 0 0 16px;
-}
-
-.btn-try-again {
-  margin-top: 4px;
+  margin: 0;
 }
 
 /* Hide game views when reward offer is revealed */
@@ -606,17 +535,17 @@ h1 {
   display: none !important;
 }
 
-/* Revealed Reward Card Inside White Container */
+/* VIEW 4: Revealed Reward Card Inside White Container */
 .reward-card {
   position: absolute;
   inset: 0;
   z-index: 1;
   display: flex;
-  padding: 30px 24px 26px;
+  padding: 24px 22px 18px;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: var(--white);
+  justify-content: space-between;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FDFBF7 100%);
   opacity: 0;
   visibility: hidden;
   transform: translateY(18px) scale(0.96);
@@ -634,9 +563,9 @@ h1 {
   background: linear-gradient(
     115deg,
     transparent 38%,
-    rgba(255, 185, 0, 0.1) 46%,
-    rgba(255, 246, 200, 0.32) 50%,
-    rgba(255, 185, 0, 0.1) 54%,
+    rgba(255, 185, 0, 0.08) 46%,
+    rgba(255, 246, 200, 0.28) 50%,
+    rgba(255, 185, 0, 0.08) 54%,
     transparent 62%
   );
   transform: translateX(-100%);
@@ -671,114 +600,277 @@ h1 {
   }
 }
 
-.reward-watermark {
-  position: absolute;
-  inset: 0;
-  background: url("assets/logo.png") center 48% / 130px no-repeat;
-  opacity: 0.055;
-  pointer-events: none;
+/* Redesigned Offer Reveal Layout */
+.reward-top-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 4px;
 }
 
-.reward-kicker {
-  position: relative;
-  margin: 0 0 8px;
-  color: #9c720c;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
+.reward-sparkle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 2px 8px rgba(255, 185, 0, 0.4));
+  animation: sparkle-float 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes sparkle-float {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-3px) scale(1.06); }
+}
+
+.reward-congrats-title {
+  margin: 0 0 2px;
+  color: #1C1A17;
+  font-family: var(--sans);
+  font-size: clamp(21px, 4.4vw, 26px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
   text-transform: uppercase;
 }
 
-.reward-title {
-  position: relative;
-  max-width: 100%;
+.reward-congrats-sub {
   margin: 0;
+  color: #8C7F6B;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Score Section: Displays Final Score in Reward View */
+.reward-score-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 6px 0;
+}
+
+.reward-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 14px;
+  background: rgba(255, 185, 0, 0.12);
+  border: 1px solid rgba(255, 185, 0, 0.42);
+  border-radius: 16px;
+}
+
+.reward-score-label {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #8F5600;
+  text-transform: uppercase;
+}
+
+.reward-score-number {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 800;
+  color: #1C1A17;
+}
+
+.reward-score-summary {
+  margin: 3px 0 0;
+  color: #696254;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+/* Prominent Gold-Outlined Reward Card Panel */
+.reward-featured-panel {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 185, 0, 0.12) 0%, transparent 70%),
+    linear-gradient(180deg, #FFFDF8 0%, #FAF6ED 100%);
+  border: 1.5px solid rgba(255, 185, 0, 0.55);
+  border-radius: 14px;
+  box-shadow:
+    0 8px 24px rgba(255, 185, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+}
+
+.reward-panel-sweep {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.6) 48%,
+    rgba(255, 246, 200, 0.8) 50%,
+    rgba(255, 255, 255, 0.6) 52%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+.white-container.is-revealed .reward-panel-sweep {
+  animation: panel-sweep 1.6s cubic-bezier(0.2, 0.8, 0.25, 1) 0.35s 1 forwards;
+}
+
+@keyframes panel-sweep {
+  0% { transform: translateX(-100%) rotate(0deg); }
+  100% { transform: translateX(100%) rotate(0deg); }
+}
+
+.reward-panel-watermark {
+  position: absolute;
+  inset: 0;
+  background: url("assets/logo.png") center center / 100px no-repeat;
+  opacity: 0.045;
+  pointer-events: none;
+}
+
+.reward-panel-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  background: rgba(255, 185, 0, 0.16);
+  border: 1px solid rgba(255, 185, 0, 0.4);
+  border-radius: 12px;
+  color: #8F5600;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.reward-panel-title {
+  margin: 0 0 6px;
   color: var(--charcoal);
   font-family: var(--sans);
-  font-size: clamp(24px, 5vw, 32px);
-  font-weight: 700;
-  line-height: 1.18;
-  text-align: center;
-}
-
-.reward-description {
-  position: relative;
-  margin: 10px 0 16px;
-  color: var(--charcoal-secondary);
-  font-size: 13.5px;
-  line-height: 1.45;
-  text-align: center;
-}
-
-.reward-code-wrap {
-  position: relative;
-  margin-bottom: 12px;
-}
-
-.reward-code {
-  display: inline-block;
-  padding: 8px 22px;
-  border: 1px solid var(--gold);
-  border-radius: 4px;
-  background: rgba(255, 185, 0, 0.12);
-  color: #7d5400;
-  font-size: 11px;
+  font-size: clamp(19px, 4vw, 23px);
   font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  box-shadow: 0 2px 8px rgba(255, 185, 0, 0.15);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
-.reward-terms {
-  position: relative;
+.reward-panel-desc {
   margin: 0;
-  color: #8c867a;
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
-  text-align: center;
+  color: var(--charcoal-secondary);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  max-width: 340px;
 }
 
-/* Outer Confetti Popper Layer (Outside white card on black background) */
-.popper-layer {
-  position: absolute;
+/* Actions: Play Again Button */
+.reward-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.play-again-btn {
+  padding: 10px 28px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border-radius: 24px;
+}
+
+/* Understated Brand Section */
+.reward-brand-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  opacity: 0.78;
+}
+
+.reward-mini-logo {
+  width: auto;
+  height: 22px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(255, 185, 0, 0.15));
+}
+
+.reward-brand-text {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #7A7264;
+  text-transform: uppercase;
+}
+
+.reward-brand-dot {
+  color: var(--gold);
+  font-weight: 900;
+}
+
+/* =========================================================================
+   FULL-SCREEN CONFETTI CELEBRATION OVERLAY
+   Renders across the entire viewport (in front of the white card & background)
+   ========================================================================= */
+.fullscreen-confetti-overlay {
+  position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
-  overflow: visible;
-  z-index: 10;
+  z-index: 99999;
+  overflow: hidden;
 }
 
-.popper-origin {
+.confetti-particle {
   position: absolute;
-  top: 48%;
-  width: 1px;
-  height: 1px;
-  pointer-events: none;
-}
-
-.popper-origin-left {
-  left: -14px;
-}
-
-.popper-origin-right {
-  right: -14px;
-}
-
-.confetti-piece {
-  position: absolute;
-  top: 0;
-  left: 0;
   pointer-events: none;
   will-change: transform, opacity;
-  animation-timing-function: cubic-bezier(0.12, 0.85, 0.25, 1);
   animation-fill-mode: forwards;
 }
 
-@keyframes popper-left-burst {
+/* 1. Downward Cascading Stream (Drifts in 3D right over the card) */
+@keyframes confetti-cascade {
+  0% {
+    transform: translate3d(var(--x-start), -30px, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(var(--x-end), 105vh, 0) rotateX(var(--rot-x)) rotateY(var(--rot-y)) rotateZ(var(--rot-z));
+    opacity: 0;
+  }
+}
+
+/* 2. Left Cannon Arc (Blasts up/inward then drops under gravity) */
+@keyframes confetti-cannon-left {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg) scale(0.3);
     opacity: 0;
   }
-  10% {
+  12% {
     opacity: 1;
   }
   42% {
@@ -786,7 +878,7 @@ h1 {
     opacity: 1;
   }
   75% {
-    opacity: 0.92;
+    opacity: 0.95;
   }
   100% {
     transform: translate3d(var(--dx), var(--fall-y), 0) rotate(var(--rot)) scale(0.85);
@@ -794,12 +886,13 @@ h1 {
   }
 }
 
-@keyframes popper-right-burst {
+/* 3. Right Cannon Arc (Blasts up/inward from right then drops) */
+@keyframes confetti-cannon-right {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg) scale(0.3);
     opacity: 0;
   }
-  10% {
+  12% {
     opacity: 1;
   }
   42% {
@@ -807,29 +900,54 @@ h1 {
     opacity: 1;
   }
   75% {
-    opacity: 0.92;
+    opacity: 0.95;
   }
   100% {
     transform: translate3d(var(--dx), var(--fall-y), 0) rotate(var(--rot)) scale(0.85);
     opacity: 0;
   }
 }
-  pointer-events: none;
+
+/* 4. Center Radial Burst */
+@keyframes confetti-burst-radial {
+  0% {
+    transform: translate3d(var(--cx), var(--cy), 0) scale(0.2);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(calc(var(--cx) + var(--dx)), calc(var(--cy) + var(--dy) * 0.5), 0) rotate(calc(var(--rot) * 0.5)) scale(1);
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(calc(var(--cx) + var(--dx) * 1.3), calc(var(--cy) + var(--dy) + 180px), 0) rotate(var(--rot)) scale(0.8);
+    opacity: 0;
+  }
 }
 
-/* Discreet Reset Demo Button */
+/* Discreet Reset Demo Button (Centered on Desktop and Mobile) */
 .reset-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 18px;
+  align-items: center;
+  width: 100%;
+  margin-top: 22px;
+  text-align: center;
 }
 
 .reset-demo-btn {
   display: inline-flex;
+  margin: 0 auto;
   padding: 8px 18px;
   align-items: center;
+  justify-content: center;
   gap: 7px;
-  border: 1px solid rgba(255, 185, 0, 0.25);
+  border: 1px solid rgba(255, 185, 0, 0.28);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.04);
   color: #b0aa9e;
@@ -861,6 +979,7 @@ h1 {
   align-items: center;
   gap: 8px;
   color: #635f56;
+  font-family: var(--sans);
   font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -884,6 +1003,10 @@ h1 {
 
   .hero-intro {
     margin-top: clamp(16px, 3vh, 26px);
+  }
+
+  h1 {
+    font-size: clamp(28px, 7vw, 36px);
   }
 
   .white-container-wrap {
@@ -925,13 +1048,12 @@ h1 {
   }
 
   .hud-pill {
-    padding: 5px 10px;
-    font-size: 10.5px;
-    min-width: 68px;
+    padding: 5px 12px;
+    font-size: 10px;
   }
 
   .hud-value {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .player-bucket {
@@ -945,25 +1067,28 @@ h1 {
     font-size: 8.5px;
   }
 
-  .popper-origin-left {
-    left: -4px;
-  }
-
-  .popper-origin-right {
-    right: -4px;
-  }
-
   .reward-card {
-    padding: 22px 16px 20px;
+    padding: 20px 14px 16px;
   }
 
-  .reward-title {
-    font-size: 22px;
+  .reward-featured-panel {
+    padding: 15px 12px 14px;
   }
 
-  .reward-description {
-    font-size: 12px;
-    margin: 8px 0 14px;
+  .reward-congrats-title {
+    font-size: 20px;
+  }
+
+  .reward-panel-title {
+    font-size: 18px;
+  }
+
+  .reward-panel-desc {
+    font-size: 11.5px;
+  }
+
+  .play-again-btn {
+    padding: 8px 22px;
+    font-size: 11.5px;
   }
 }
-

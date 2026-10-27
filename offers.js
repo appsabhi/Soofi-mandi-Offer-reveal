@@ -3,7 +3,7 @@
 window.SOOFI_MANDI_DEMO_OFFERS = [
   {
     id: "offer-main",
-    kicker: "YOUR SPECIAL OFFER",
+    badge: "YOUR SPECIAL OFFER",
     title: "Demo offer · To be confirmed",
     description: "Special promotion details will be updated soon.",
     brand: "SOOFI MANDI · YEMENI CUISINE"
