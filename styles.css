@@ -840,30 +840,54 @@ body.state-revealed .page-wrap {
   display: none !important;
 }
 
-/* VIEW 4: Revealed Reward Card Inside White Container */
+/* =========================================================================
+   VIEW 4: PREMIER RESTAURANT OFFER REVEAL SCREEN
+   - Warm ivory, rich dark brown, and elegant golden accents
+   - Prominent Soofi Mandi logo branding
+   - Refined celebratory feast score section
+   - High-contrast, golden illuminated special offer card (Main Attraction)
+   - Primary Play Again & secondary Reset Demo buttons
+   ========================================================================= */
+
+.white-container.is-results,
+.white-container.is-revealed {
+  max-width: 580px;
+  margin: 0 auto;
+  padding: 12px 16px 24px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 .reward-card {
   position: relative;
   display: flex;
   width: 100%;
-  max-width: 480px;
+  max-width: 500px;
   margin: 0 auto;
-  padding: 26px 24px 22px;
+  padding: 28px 26px 24px;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: #FFFFFF;
-  border: 1.5px solid rgba(255, 185, 0, 0.45);
-  border-radius: 18px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFFEFC 60%, #FFFDF7 100%);
+  border: 1.5px solid rgba(255, 185, 0, 0.58);
+  border-radius: 24px;
   box-shadow:
-    0 10px 30px rgba(68, 44, 18, 0.08),
-    0 2px 10px rgba(255, 185, 0, 0.08);
+    0 22px 55px rgba(68, 44, 18, 0.12),
+    0 4px 18px rgba(255, 185, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(255, 240, 190, 0.4);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(16px) scale(0.97);
+  transform: translateY(18px) scale(0.96);
   overflow: hidden;
   pointer-events: none;
   box-sizing: border-box;
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
 }
 
 .reward-shimmer {
@@ -898,18 +922,66 @@ body.state-revealed .page-wrap {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
-  animation: card-reveal-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: card-reveal-pop 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes card-reveal-pop {
   0% {
     opacity: 0;
-    transform: translateY(18px) scale(0.95);
+    transform: translateY(20px) scale(0.95);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* Prominent Brand Logo at the Top of the Reward Screen */
+.reward-logo-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 12px;
+}
+
+.reward-logo {
+  display: block;
+  width: auto;
+  height: clamp(62px, 8vh, 76px);
+  max-width: 175px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(184, 115, 0, 0.26));
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+
+.reward-logo:hover {
+  transform: scale(1.03);
+}
+
+/* Understated Arabian-inspired Ornamental Accent */
+.reward-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto 16px;
+  opacity: 0.85;
+}
+
+.ornament-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 185, 0, 0.65), transparent);
+}
+
+.ornament-gem {
+  color: #C78600;
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* 1. Result Screen Header: TIME'S UP! and Player's Actual Final Score */
@@ -919,38 +991,76 @@ body.state-revealed .page-wrap {
   align-items: center;
   text-align: center;
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+}
+
+.reward-kicker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.kicker-star {
+  color: #FFB900;
+  font-size: 11px;
 }
 
 .reward-kicker {
-  margin: 0 0 4px;
+  margin: 0;
   color: #B45309;
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 800;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
 }
 
-.reward-score-heading {
-  margin: 0 0 4px;
-  color: var(--text-dark);
-  font-family: var(--sans);
-  font-size: clamp(23px, 5vw, 29px);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
+.reward-score-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 24px 12px;
+  background: linear-gradient(180deg, #FFFDF8 0%, #FAF3E6 100%);
+  border: 1px solid rgba(255, 185, 0, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(68, 44, 18, 0.04);
+  margin-bottom: 4px;
+  min-width: 220px;
+}
+
+.reward-score-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #8C7862;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.reward-score-val-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
 }
 
 .reward-score-number {
-  color: var(--gold-dark);
+  color: #C78600;
+  font-size: clamp(32px, 7vw, 42px);
   font-weight: 900;
-  display: inline-block;
-  margin-left: 2px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.reward-score-unit {
+  font-size: 12px;
+  font-weight: 800;
+  color: #9C7D54;
+  letter-spacing: 0.08em;
 }
 
 .reward-score-summary {
-  margin: 0;
+  margin: 6px 0 0;
   color: var(--text-body);
   font-family: var(--sans);
   font-size: 13.5px;
@@ -958,47 +1068,48 @@ body.state-revealed .page-wrap {
   line-height: 1.4;
 }
 
-/* 2. Light Offer Card with Subtle Gold Border */
+/* 2. Highlighted Special Offer Card (Main Attraction) */
 .reward-offer-card {
   position: relative;
   width: 100%;
-  max-width: 440px;
-  padding: 18px 20px 16px;
-  margin-bottom: 18px;
+  padding: 22px 24px 20px;
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: #FFFFFF;
-  border: 1.5px solid rgba(255, 185, 0, 0.45);
-  border-radius: 14px;
+  background: linear-gradient(180deg, #FFFDF8 0%, #FFF9EB 100%);
+  border: 1.5px solid rgba(255, 185, 0, 0.65);
+  border-radius: 18px;
   box-shadow:
-    0 4px 16px rgba(255, 185, 0, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.03);
+    0 8px 28px rgba(255, 185, 0, 0.16),
+    0 2px 8px rgba(68, 44, 18, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(255, 235, 160, 0.4);
   overflow: hidden;
   box-sizing: border-box;
 }
 
 .reward-panel-sweep {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
   background: linear-gradient(
     115deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.6) 48%,
-    rgba(255, 246, 200, 0.8) 50%,
-    rgba(255, 255, 255, 0.6) 52%,
-    transparent 60%
+    transparent 35%,
+    rgba(255, 255, 255, 0.6) 47%,
+    rgba(255, 235, 170, 0.85) 50%,
+    rgba(255, 255, 255, 0.6) 53%,
+    transparent 65%
   );
   transform: translateX(-100%);
   pointer-events: none;
 }
 
 .white-container.is-revealed .reward-panel-sweep {
-  animation: panel-sweep 1.6s cubic-bezier(0.2, 0.8, 0.25, 1) 0.35s 1 forwards;
+  animation: panel-sweep 1.8s cubic-bezier(0.2, 0.8, 0.25, 1) 0.3s 1 forwards;
 }
 
 @keyframes panel-sweep {
@@ -1006,40 +1117,70 @@ body.state-revealed .page-wrap {
   100% { transform: translateX(100%) rotate(0deg); }
 }
 
+.reward-offer-header {
+  margin-bottom: 10px;
+}
 
 .reward-offer-badge {
-  display: inline-block;
-  padding: 3.5px 13px;
-  background: rgba(255, 185, 0, 0.18);
-  border: 1px solid rgba(255, 185, 0, 0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 15px;
+  background: linear-gradient(135deg, rgba(255, 185, 0, 0.24) 0%, rgba(255, 215, 80, 0.14) 100%);
+  border: 1px solid rgba(199, 134, 0, 0.45);
   border-radius: 999px;
-  color: var(--gold-dark);
+  color: #8F5600;
   font-family: var(--sans);
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(255, 185, 0, 0.12);
 }
 
 .reward-offer-title {
-  margin: 0 0 6px;
-  color: var(--text-dark);
+  margin: 0 0 8px;
+  color: #2A1706;
   font-family: var(--sans);
-  font-size: clamp(18px, 4vw, 21px);
+  font-size: clamp(20px, 4.4vw, 24px);
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.01em;
 }
 
 .reward-offer-desc {
-  margin: 0;
-  color: var(--text-body);
+  margin: 0 0 12px;
+  color: #544436;
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 500;
-  line-height: 1.45;
-  max-width: 360px;
+  line-height: 1.48;
+  max-width: 380px;
+}
+
+.reward-offer-meta {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.offer-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px dashed rgba(184, 115, 0, 0.38);
+  border-radius: 999px;
+  color: #7A6753;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.offer-status-pill svg {
+  color: #C78600;
+  flex-shrink: 0;
 }
 
 /* 3. Action Buttons: Play Again (Primary Gold) & Reset Demo (Secondary Outlined) */
@@ -1048,64 +1189,70 @@ body.state-revealed .page-wrap {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  max-width: 300px;
-  margin-bottom: 14px;
+  max-width: 340px;
+  margin-bottom: 18px;
 }
 
 .play-again-btn {
   width: 100%;
-  padding: 12px 24px;
+  padding: 14px 28px;
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
   border-radius: 999px;
-  background: linear-gradient(135deg, #FFB900 0%, #FFA800 100%);
-  color: #2C1A0E;
-  border: 1px solid rgba(184, 115, 0, 0.4);
-  box-shadow: 0 4px 16px rgba(255, 185, 0, 0.38);
+  background: linear-gradient(135deg, #FFC933 0%, #FFB900 50%, #E5A300 100%);
+  color: #2D1B00;
+  border: none;
+  box-shadow: 0 6px 20px rgba(255, 185, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.08);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 9px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
 .play-again-btn:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(255, 185, 0, 0.48);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 26px rgba(255, 185, 0, 0.52);
 }
 
 .play-again-btn:active {
   transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(255, 185, 0, 0.32);
+}
+
+.play-again-btn:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
 }
 
 .reward-reset-btn {
   width: 100%;
-  padding: 10px 22px;
+  padding: 10px 24px;
   font-family: var(--sans);
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-  color: var(--text-dark);
-  border: 1.5px solid rgba(184, 115, 0, 0.38);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  background: #FFFFFF;
+  color: var(--text-body);
+  border: 1.5px solid rgba(199, 134, 0, 0.45);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .reward-reset-btn:hover {
-  background: #FFFFFF;
-  border-color: var(--gold);
+  background: #FFFDF8;
+  border-color: var(--gold-dark);
   color: var(--gold-dark);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 185, 0, 0.2);
@@ -1115,28 +1262,27 @@ body.state-revealed .page-wrap {
   transform: translateY(1px);
 }
 
+.reward-reset-btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
 /* 4. Understated Brand Section */
 .reward-brand-section {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  opacity: 0.85;
-  margin-top: 2px;
-}
-
-.reward-mini-logo {
-  width: auto;
-  height: 20px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(255, 185, 0, 0.2));
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 185, 0, 0.2);
+  width: 100%;
 }
 
 .reward-brand-text {
   font-family: var(--sans);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   color: var(--text-muted);
   text-transform: uppercase;
 }
