@@ -1,7 +1,7 @@
 :root {
-  --stage-center: #1B5E45;
+  --stage-center: #2F405C;
   --stage-edge: #0A2A20;
-  --stage-floor: #123F30;
+  --stage-floor: #273958;
 
   --gold-500: #F5B800;
   --gold-300: #FFD24D;
@@ -105,7 +105,7 @@ body.state-playing .page-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 2px;
+  margin-bottom: 10px;
   flex-shrink: 0;
 }
 
