@@ -1,16 +1,22 @@
 :root {
-  color-scheme: dark;
-  --bg-dark: #0b0b0b;
-  --gold: #ffb900;
-  --gold-deep: #c98800;
-  --gold-sheen: #fff6c8;
-  --white: #ffffff;
-  --charcoal: #1c1a17;
-  --charcoal-secondary: #524e46;
-  --text-light: #ffffff;
-  --text-ivory: #f5f2eb;
-  --sans: "Poppins", Arial, sans-serif;
-  --font-family: "Poppins", Arial, sans-serif;
+  color-scheme: light;
+  --bg-page: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-playfield: #FFFFFF;
+  --gold: #FFB900;
+  --gold-hover: #EAA800;
+  --gold-deep: #C78600;
+  --gold-dark: #8F5600;
+  --gold-light: #FFF6D6;
+  --gold-sheen: #FFFDF5;
+  --text-dark: #2A1706;
+  --text-body: #544436;
+  --text-muted: #847565;
+  --border-card: #EDE5D8;
+  --border-gold: rgba(255, 185, 0, 0.45);
+  --shadow-card: 0 18px 45px rgba(68, 44, 18, 0.08), 0 2px 12px rgba(255, 185, 0, 0.07);
+  --sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 * {
@@ -21,42 +27,65 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  color: var(--text-light);
-  background-color: var(--bg-dark);
-  background-image:
-    radial-gradient(ellipse at 50% 10%, rgba(255, 185, 0, 0.08) 0%, transparent 60%),
-    radial-gradient(circle at 50% 90%, rgba(255, 185, 0, 0.03) 0%, transparent 50%);
+  color: var(--text-body);
+  background-color: #FFFFFF;
+  background-image: none;
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* Page Wrapper */
+/* Solid White Background on all three screens */
+body.state-intro,
+body.state-playing,
+body.state-results,
+body.state-revealed {
+  background-color: #FFFFFF;
+  background-image: none;
+}
+
+/* Page Wrapper — Uses full available viewport */
 .page-wrap {
+  position: relative;
+  z-index: 2;
   display: flex;
-  width: min(100% - 36px, 620px);
+  width: 100%;
+  max-width: 1600px;
   min-height: 100svh;
   margin: 0 auto;
-  padding: 32px 0 24px;
+  padding: 16px 16px 20px;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  box-sizing: border-box;
 }
 
-/* Brand Header */
+body.state-intro .page-wrap,
+body.state-revealed .page-wrap {
+  justify-content: center;
+}
+
+/* Brand Header — Rendered cleanly above wide containers; hidden on intro screen since intro card has its own integrated logo */
 .brand-header {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-bottom: 10px;
+}
+
+.page-wrap:has(.white-container.is-intro) .brand-header,
+.white-container.is-intro ~ .brand-header {
+  display: none;
 }
 
 .brand-logo {
   display: block;
   width: auto;
-  height: clamp(66px, 9vh, 82px);
-  max-width: 180px;
+  height: clamp(52px, 6.5vh, 70px);
+  max-width: 170px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 14px rgba(255, 185, 0, 0.22));
+  filter: drop-shadow(0 3px 10px rgba(184, 115, 0, 0.22));
   user-select: none;
   -webkit-user-select: none;
   transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.25, 1);
@@ -66,66 +95,70 @@ body {
   transform: scale(1.03);
 }
 
-/* Hero Intro (Headline & Subheading) */
-.hero-intro {
-  margin-top: clamp(22px, 4vh, 36px);
-  text-align: center;
-}
-
-.subheading {
-  margin: 0 0 10px;
-  color: var(--gold);
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-}
-
-h1 {
-  margin: 0;
-  color: var(--text-light);
-  font-family: var(--sans);
-  font-size: clamp(32px, 6.5vw, 48px);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-}
-
-/* White Container Wrapper */
+/* Container Wrapper — Full screen width, no restrictive clipping */
 .white-container-wrap {
   position: relative;
   width: 100%;
-  margin-top: clamp(24px, 4.5vh, 38px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
-/* The Main Prominent White Container */
+/* The Main Container — Unboxed, sits directly over full-screen background */
 .white-container {
   position: relative;
   width: 100%;
-  min-height: 380px;
-  padding: 28px 24px 26px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* State 1: Intro Screen — Unboxed, content directly positioned over full-screen scene */
+.white-container.is-intro {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 16px 18px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* State 2: Gameplay Container — Expands to fill spacious wide play area */
+.white-container.is-playing {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* State 3: Offer Reveal Container — Full-screen palace background */
+.white-container.is-results,
+.white-container.is-revealed {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--white);
-  border-radius: 16px;
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.65),
-    0 4px 18px rgba(255, 185, 0, 0.12),
-    0 1px 3px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  transition: min-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.white-container h1,
 .white-container h2 {
   font-family: var(--sans);
 }
 
 /* Game Views Inside White Container */
 .game-view {
-  display: none;
+  display: none !important;
   width: 100%;
   flex-direction: column;
   align-items: center;
@@ -134,14 +167,14 @@ h1 {
 }
 
 .game-view.is-active {
-  display: flex;
+  display: flex !important;
   animation: view-fade-in 0.35s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
 }
 
 @keyframes view-fade-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.98);
+    transform: translateY(8px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -149,137 +182,295 @@ h1 {
   }
 }
 
-.game-kicker {
-  margin: 0 0 4px;
-  color: #a37200;
+/* =========================================================================
+   VIEW 1: INTRODUCTION SCREEN (Clean Minimalist White Background)
+   ========================================================================= */
+.game-view-intro {
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* 1. Soofi Mandi Logo */
+.intro-logo-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 14px;
+}
+
+.intro-logo {
+  display: block;
+  width: auto;
+  height: clamp(52px, 7vh, 68px);
+  max-width: 155px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 8px rgba(184, 115, 0, 0.16));
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+
+.intro-logo:hover {
+  transform: scale(1.03);
+}
+
+/* 2. Small uppercase gold eyebrow */
+.intro-eyebrow {
+  margin: 0 0 6px;
+  color: #C78600;
   font-family: var(--sans);
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
 }
 
-.game-title {
-  margin: 0 0 6px;
-  color: var(--charcoal);
+/* 3. Large bold dark-brown heading */
+.intro-heading {
+  margin: 0 0 4px;
+  color: #2A1706;
   font-family: var(--sans);
-  font-size: clamp(23px, 4.6vw, 30px);
+  font-size: clamp(28px, 5vw, 36px);
   font-weight: 800;
-  line-height: 1.18;
-  letter-spacing: -0.01em;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
-.game-subtitle {
-  max-width: 380px;
-  margin: 0 0 14px;
-  color: var(--charcoal-secondary);
+/* 4. Gold heading */
+.game-title {
+  margin: 0 0 8px;
+  color: #C78600;
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: clamp(20px, 4vw, 26px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+}
+
+/* 5. Short description */
+.game-subtitle {
+  max-width: 440px;
+  margin: 0 auto 16px;
+  color: #544436;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 500;
   line-height: 1.45;
 }
 
-.intro-illustration {
-  margin: 4px 0 14px;
-  filter: drop-shadow(0 6px 14px rgba(255, 185, 0, 0.2));
-  animation: float-bucket 3s ease-in-out infinite;
+/* 6. Centered Mandi Bucket (larger & prominent) */
+.intro-bucket-wrap {
+  width: 170px;
+  height: 148px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto 16px;
+  filter: drop-shadow(0 10px 22px rgba(45, 27, 0, 0.16));
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-@keyframes float-bucket {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
+.intro-bucket-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* 7. Mouse/drag instruction with icon beside text */
+.intro-instruction-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto 20px;
+  max-width: 440px;
+}
+
+.intro-instruction-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: #8F5600;
 }
 
 .game-instruction {
-  margin: 0 0 16px;
-  color: #736d60;
+  margin: 0;
+  color: #544436;
   font-family: var(--sans);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+/* 8 & 9. Action buttons container (START GAME & Reset Demo) */
+.intro-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
 }
 
 .btn-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 34px;
-  border: none;
-  border-radius: 28px;
+  gap: 9px;
   font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.22s cubic-bezier(0.2, 0.8, 0.25, 1);
-  box-shadow: 0 4px 16px rgba(255, 185, 0, 0.35);
 }
 
 .btn-gold {
-  background: linear-gradient(135deg, #FFC933 0%, #FFB900 45%, #E5A300 100%);
-  color: #382400;
+  background: linear-gradient(135deg, #FFC933 0%, #FFB900 48%, #E5A300 100%);
+  color: #2D1B00;
 }
 
-.btn-action:hover {
+/* 8. Prominent gold gradient pill-shaped START GAME button with play icon */
+.start-game-btn {
+  padding: 13px 44px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #FFC933 0%, #FFB900 50%, #E5A300 100%);
+  color: #2D1B00;
+  box-shadow: 0 6px 20px rgba(255, 185, 0, 0.38), 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.start-game-btn:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 6px 22px rgba(255, 185, 0, 0.48);
+  box-shadow: 0 8px 26px rgba(255, 185, 0, 0.48);
 }
 
-.btn-action:active {
+.start-game-btn:active {
   transform: translateY(1px);
 }
 
-.btn-action:focus-visible {
+.start-game-btn:focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 3px;
 }
 
-/* Playing HUD (Score & Timer Prominently Displayed Without Target Progress) */
+/* 9. Smaller white Reset Demo button with a thin gold border */
+.btn-intro-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 24px;
+  background: #FFFFFF;
+  border: 1.5px solid rgba(199, 134, 0, 0.45);
+  border-radius: 999px;
+  color: var(--text-body);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-intro-reset:hover {
+  background: #FFFDF8;
+  border-color: var(--gold-dark);
+  color: var(--gold-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 185, 0, 0.2);
+}
+
+.btn-intro-reset:active {
+  transform: translateY(1px);
+}
+
+.btn-intro-reset:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* =========================================================================
+   VIEW 2: ACTIVE GAMEPLAY SCREEN (Spacious Playfield & Compact HUD)
+   ========================================================================= */
 .game-view-playing {
   width: 100%;
 }
 
+/* Compact status bar directly above the playfield */
 .game-hud {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.hud-center-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hud-title-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--gold-deep);
+  text-transform: uppercase;
+}
+
+.hud-title-main {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text-dark);
+  text-transform: uppercase;
 }
 
 .hud-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  background: #F7F5EE;
-  border: 1px solid rgba(255, 185, 0, 0.45);
-  border-radius: 20px;
+  justify-content: center;
+  gap: 8px;
+  min-width: 124px;
+  height: 40px;
+  padding: 6px 18px;
+  background: #FAF7F0;
+  border: 1.5px solid rgba(255, 185, 0, 0.45);
+  border-radius: 999px;
   font-family: var(--sans);
   user-select: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px rgba(68, 44, 18, 0.05);
+  box-sizing: border-box;
 }
 
 .hud-label {
-  color: #8C7F6B;
-  font-size: 10.5px;
+  color: #8C7862;
+  font-size: 11px;
   letter-spacing: 0.14em;
   font-weight: 700;
 }
 
 .hud-value {
   font-family: var(--sans);
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 800;
   letter-spacing: 0.02em;
-  color: #1C1A17;
+  color: var(--text-dark);
 }
 
 .hud-score {
@@ -287,7 +478,7 @@ h1 {
 }
 
 .hud-score .hud-value {
-  color: #B87300;
+  color: var(--gold-dark);
   display: inline-block;
   transition: transform 0.15s cubic-bezier(0.18, 0.85, 0.3, 1);
 }
@@ -322,18 +513,17 @@ h1 {
   to { transform: scale(1.06); }
 }
 
-/* Play Area */
+/* Playfield — Clean solid white background with subtle neutral border */
 .game-play-area {
   position: relative;
   width: 100%;
-  height: 290px;
+  height: clamp(480px, 68vh, 720px);
   margin-top: 10px;
-  background:
-    radial-gradient(ellipse at 50% 10%, rgba(255, 185, 0, 0.08) 0%, transparent 60%),
-    linear-gradient(180deg, #FFFEFA 0%, #F9F5EA 100%);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 185, 0, 0.25);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.03);
+  background-color: #FFFFFF;
+  background-image: none;
+  border-radius: 20px;
+  border: 1.5px solid #EDE5D8;
+  box-shadow: 0 8px 30px rgba(68, 44, 18, 0.05);
   overflow: hidden;
   touch-action: none;
   user-select: none;
@@ -345,35 +535,160 @@ h1 {
   cursor: grabbing;
 }
 
+/* =========================================================================
+   3D LAYERED BUCKET & FALLING FOOD ENTRY SYSTEM
+   1. Rear bucket layer (z-index: 2, back rim & cavity interior)
+   2. Falling food items layer (z-index: 4, drops into open interior)
+   3. Front bucket layer (z-index: 6, front rim & front body, clips over food)
+   ========================================================================= */
+.bucket-layer {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 130px;
+  height: 130px;
+  will-change: left;
+  pointer-events: none;
+  transition: transform 0.08s ease-out;
+}
+
+.bucket-layer.is-moving-left {
+  transform: translateX(-50%) rotate(-4deg);
+}
+
+.bucket-layer.is-moving-right {
+  transform: translateX(-50%) rotate(4deg);
+}
+
+/* 1. Rear bucket layer: Renders behind falling food */
+.bucket-rear-layer {
+  z-index: 2;
+  filter: drop-shadow(0 6px 16px rgba(45, 27, 0, 0.32));
+}
+
+.bucket-rear-layer .bucket-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* 2. Falling food layer: Drops into the bucket opening */
 .falling-items-layer {
   position: absolute;
   inset: 0;
+  z-index: 4;
   pointer-events: none;
   overflow: hidden;
 }
 
-/* Falling Food Item Elements */
+/* 3. Front bucket layer: Renders IN FRONT OF food, clipped to front rim and body */
+.bucket-front-layer {
+  z-index: 6;
+  clip-path: polygon(
+    0% 25.5%,
+    5% 25.8%,
+    10% 27.2%,
+    15% 29.2%,
+    20% 31.4%,
+    25% 33.2%,
+    30% 34.7%,
+    35% 35.8%,
+    40% 36.4%,
+    45% 36.6%,
+    50% 36.7%,
+    55% 36.6%,
+    60% 36.4%,
+    65% 35.8%,
+    70% 34.7%,
+    75% 33.2%,
+    80% 31.4%,
+    85% 29.2%,
+    90% 27.2%,
+    95% 25.8%,
+    100% 25.5%,
+    100% 100%,
+    0% 100%
+  );
+  -webkit-clip-path: polygon(
+    0% 25.5%,
+    5% 25.8%,
+    10% 27.2%,
+    15% 29.2%,
+    20% 31.4%,
+    25% 33.2%,
+    30% 34.7%,
+    35% 35.8%,
+    40% 36.4%,
+    45% 36.6%,
+    50% 36.7%,
+    55% 36.6%,
+    60% 36.4%,
+    65% 35.8%,
+    70% 34.7%,
+    75% 33.2%,
+    80% 31.4%,
+    85% 29.2%,
+    90% 27.2%,
+    95% 25.8%,
+    100% 25.5%,
+    100% 100%,
+    0% 100%
+  );
+}
+
+.bucket-front-layer .bucket-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Falling food items with attached horizontal name tag */
 .falling-food-item {
   position: absolute;
   top: 0;
   left: 0;
-  width: 36px;
-  height: 36px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   pointer-events: none;
   will-change: transform;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.14));
 }
 
-.falling-food-item svg {
-  width: 100%;
-  height: 100%;
+.falling-food-item .food-img {
+  width: 82px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(45, 27, 0, 0.22));
+  display: block;
+  pointer-events: none;
 }
 
+/* Food name tag: Horizontal, aligned, crisp, no unwanted rotations */
+.falling-food-item .food-name-tag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2.5px 10px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(184, 115, 0, 0.38);
+  border-radius: 12px;
+  color: var(--text-dark);
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(42, 23, 6, 0.12);
+  line-height: 1.25;
+  pointer-events: none;
+}
+
+/* Food entering bucket animation — Food drops deep into the bucket opening behind front wall */
 .falling-food-item.is-caught {
-  animation: food-caught-pop 0.35s cubic-bezier(0.18, 0.85, 0.3, 1) forwards !important;
+  animation: food-caught-pop 0.34s cubic-bezier(0.18, 0.85, 0.3, 1) forwards !important;
 }
 
 @keyframes food-caught-pop {
@@ -381,21 +696,25 @@ h1 {
     transform: var(--current-transform) scale(1);
     opacity: 1;
   }
-  50% {
-    transform: var(--current-transform) scale(1.35) translateY(-8px);
-    opacity: 0.9;
+  40% {
+    transform: var(--current-transform) translateY(18px) scale(0.85);
+    opacity: 0.95;
+  }
+  80% {
+    transform: var(--current-transform) translateY(38px) scale(0.55);
+    opacity: 0.75;
   }
   100% {
-    transform: var(--current-transform) scale(0.3) translateY(12px);
+    transform: var(--current-transform) translateY(54px) scale(0.15);
     opacity: 0;
   }
 }
 
 .catch-popup {
   position: absolute;
-  color: #8A5700;
+  color: var(--gold-dark);
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 800;
   pointer-events: none;
   z-index: 10;
@@ -411,47 +730,19 @@ h1 {
     opacity: 1;
   }
   100% {
-    transform: translate(-50%, -26px) scale(1.1);
+    transform: translate(-50%, -32px) scale(1.1);
     opacity: 0;
   }
 }
 
-/* Movable Mandi Bucket */
-.player-bucket {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 76px;
-  height: 48px;
-  pointer-events: none;
-  will-change: left;
-  z-index: 5;
-  transition: transform 0.08s ease-out;
-}
-
-.player-bucket.is-moving-left {
-  transform: translateX(-50%) rotate(-4deg);
-}
-
-.player-bucket.is-moving-right {
-  transform: translateX(-50%) rotate(4deg);
-}
-
-.bucket-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
 .bucket-drag-indicator {
   position: absolute;
-  bottom: 60px;
+  bottom: 84px;
   left: 50%;
   transform: translateX(-50%);
-  color: #9c8e76;
+  color: #9C8C78;
   font-family: var(--sans);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.16em;
   opacity: 0.85;
@@ -470,9 +761,12 @@ h1 {
   opacity: 0;
 }
 
-/* VIEW 3: Results Interstitial Screen (Celebratory Flash when 12s ends) */
+/* VIEW 3: Results Interstitial Screen */
 .game-view-results {
-  padding: 24px 16px 20px;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 30px 16px 24px;
   animation: results-zoom-in 0.4s cubic-bezier(0.18, 0.85, 0.32, 1) forwards;
   position: relative;
 }
@@ -489,7 +783,7 @@ h1 {
 }
 
 .results-badge {
-  font-size: 38px;
+  font-size: 42px;
   margin-bottom: 8px;
   filter: drop-shadow(0 4px 12px rgba(255, 185, 0, 0.45));
   animation: badge-bounce 1s cubic-bezier(0.18, 0.85, 0.3, 1) infinite alternate;
@@ -503,7 +797,7 @@ h1 {
 .results-kicker {
   color: #B45309;
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -511,10 +805,10 @@ h1 {
 }
 
 .results-title {
-  color: #1C1917;
+  color: var(--text-dark);
   font-family: var(--sans);
   font-weight: 800;
-  font-size: clamp(23px, 5.2vw, 30px);
+  font-size: clamp(24px, 5.2vw, 32px);
   margin-bottom: 6px;
   background: linear-gradient(135deg, #FFB900 0%, #D48E00 50%, #8A5700 100%);
   -webkit-background-clip: text;
@@ -522,10 +816,10 @@ h1 {
 }
 
 .results-subtitle {
-  max-width: 360px;
-  color: #524E46;
+  max-width: 380px;
+  color: var(--text-body);
   font-family: var(--sans);
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 500;
   margin: 0;
 }
@@ -537,21 +831,28 @@ h1 {
 
 /* VIEW 4: Revealed Reward Card Inside White Container */
 .reward-card {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
+  position: relative;
   display: flex;
-  padding: 24px 22px 18px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 26px 24px 22px;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(180deg, #FFFFFF 0%, #FDFBF7 100%);
+  text-align: center;
+  background: #FFFFFF;
+  border: 1.5px solid rgba(255, 185, 0, 0.45);
+  border-radius: 18px;
+  box-shadow:
+    0 10px 30px rgba(68, 44, 18, 0.08),
+    0 2px 10px rgba(255, 185, 0, 0.08);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(18px) scale(0.96);
+  transform: translateY(16px) scale(0.97);
   overflow: hidden;
   pointer-events: none;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s;
+  box-sizing: border-box;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s;
 }
 
 .reward-shimmer {
@@ -564,7 +865,7 @@ h1 {
     115deg,
     transparent 38%,
     rgba(255, 185, 0, 0.08) 46%,
-    rgba(255, 246, 200, 0.28) 50%,
+    rgba(255, 246, 200, 0.32) 50%,
     rgba(255, 185, 0, 0.08) 54%,
     transparent 62%
   );
@@ -573,7 +874,7 @@ h1 {
 }
 
 .white-container.is-revealed .reward-shimmer {
-  animation: reward-sweep 1.8s cubic-bezier(0.2, 0.8, 0.25, 1) 0.3s forwards;
+  animation: reward-sweep 1.8s cubic-bezier(0.2, 0.8, 0.25, 1) 0.2s forwards;
 }
 
 @keyframes reward-sweep {
@@ -586,13 +887,13 @@ h1 {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
-  animation: card-reveal-flip 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: card-reveal-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes card-reveal-flip {
+@keyframes card-reveal-pop {
   0% {
     opacity: 0;
-    transform: translateY(22px) scale(0.94);
+    transform: translateY(18px) scale(0.95);
   }
   100% {
     opacity: 1;
@@ -600,112 +901,71 @@ h1 {
   }
 }
 
-/* Redesigned Offer Reveal Layout */
-.reward-top-section {
+/* 1. Result Screen Header: TIME'S UP! and Player's Actual Final Score */
+.reward-result-header {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 4px;
+  width: 100%;
+  margin-bottom: 16px;
 }
 
-.reward-sparkle-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-  filter: drop-shadow(0 2px 8px rgba(255, 185, 0, 0.4));
-  animation: sparkle-float 2.5s ease-in-out infinite alternate;
-}
-
-@keyframes sparkle-float {
-  from { transform: translateY(0) scale(1); }
-  to { transform: translateY(-3px) scale(1.06); }
-}
-
-.reward-congrats-title {
-  margin: 0 0 2px;
-  color: #1C1A17;
+.reward-kicker {
+  margin: 0 0 4px;
+  color: #B45309;
   font-family: var(--sans);
-  font-size: clamp(21px, 4.4vw, 26px);
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1.15;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
-.reward-congrats-sub {
-  margin: 0;
-  color: #8C7F6B;
+.reward-score-heading {
+  margin: 0 0 4px;
+  color: var(--text-dark);
   font-family: var(--sans);
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-}
-
-/* Score Section: Displays Final Score in Reward View */
-.reward-score-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin: 6px 0;
-}
-
-.reward-score-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 4px 14px;
-  background: rgba(255, 185, 0, 0.12);
-  border: 1px solid rgba(255, 185, 0, 0.42);
-  border-radius: 16px;
-}
-
-.reward-score-label {
-  font-family: var(--sans);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: #8F5600;
-  text-transform: uppercase;
+  font-size: clamp(23px, 5vw, 29px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
 }
 
 .reward-score-number {
-  font-family: var(--sans);
-  font-size: 15px;
-  font-weight: 800;
-  color: #1C1A17;
+  color: var(--gold-dark);
+  font-weight: 900;
+  display: inline-block;
+  margin-left: 2px;
 }
 
 .reward-score-summary {
-  margin: 3px 0 0;
-  color: #696254;
+  margin: 0;
+  color: var(--text-body);
   font-family: var(--sans);
-  font-size: 11.5px;
+  font-size: 13.5px;
   font-weight: 500;
+  line-height: 1.4;
 }
 
-/* Prominent Gold-Outlined Reward Card Panel */
-.reward-featured-panel {
+/* 2. Light Offer Card with Subtle Gold Border */
+.reward-offer-card {
   position: relative;
   width: 100%;
   max-width: 440px;
-  padding: 18px 18px 16px;
+  padding: 18px 20px 16px;
+  margin-bottom: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(255, 185, 0, 0.12) 0%, transparent 70%),
-    linear-gradient(180deg, #FFFDF8 0%, #FAF6ED 100%);
-  border: 1.5px solid rgba(255, 185, 0, 0.55);
+  background: #FFFFFF;
+  border: 1.5px solid rgba(255, 185, 0, 0.45);
   border-radius: 14px;
   box-shadow:
-    0 8px 24px rgba(255, 185, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 4px 16px rgba(255, 185, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.03);
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .reward-panel-sweep {
@@ -735,80 +995,130 @@ h1 {
   100% { transform: translateX(100%) rotate(0deg); }
 }
 
-.reward-panel-watermark {
-  position: absolute;
-  inset: 0;
-  background: url("assets/logo.png") center center / 100px no-repeat;
-  opacity: 0.045;
-  pointer-events: none;
-}
 
-.reward-panel-badge {
+.reward-offer-badge {
   display: inline-block;
-  padding: 3px 12px;
-  background: rgba(255, 185, 0, 0.16);
-  border: 1px solid rgba(255, 185, 0, 0.4);
-  border-radius: 12px;
-  color: #8F5600;
+  padding: 3.5px 13px;
+  background: rgba(255, 185, 0, 0.18);
+  border: 1px solid rgba(255, 185, 0, 0.45);
+  border-radius: 999px;
+  color: var(--gold-dark);
   font-family: var(--sans);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 
-.reward-panel-title {
+.reward-offer-title {
   margin: 0 0 6px;
-  color: var(--charcoal);
+  color: var(--text-dark);
   font-family: var(--sans);
-  font-size: clamp(19px, 4vw, 23px);
+  font-size: clamp(18px, 4vw, 21px);
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: -0.01em;
 }
 
-.reward-panel-desc {
+.reward-offer-desc {
   margin: 0;
-  color: var(--charcoal-secondary);
+  color: var(--text-body);
   font-family: var(--sans);
   font-size: 12.5px;
   font-weight: 500;
   line-height: 1.45;
-  max-width: 340px;
+  max-width: 360px;
 }
 
-/* Actions: Play Again Button */
+/* 3. Action Buttons: Play Again (Primary Gold) & Reset Demo (Secondary Outlined) */
 .reward-actions {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  margin-top: 10px;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 14px;
 }
 
 .play-again-btn {
-  padding: 10px 28px;
-  font-size: 12px;
+  width: 100%;
+  padding: 12px 24px;
+  font-family: var(--sans);
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
-  border-radius: 24px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #FFB900 0%, #FFA800 100%);
+  color: #2C1A0E;
+  border: 1px solid rgba(184, 115, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(255, 185, 0, 0.38);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Understated Brand Section */
+.play-again-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(255, 185, 0, 0.48);
+}
+
+.play-again-btn:active {
+  transform: translateY(1px);
+}
+
+.reward-reset-btn {
+  width: 100%;
+  padding: 10px 22px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-dark);
+  border: 1.5px solid rgba(184, 115, 0, 0.38);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.reward-reset-btn:hover {
+  background: #FFFFFF;
+  border-color: var(--gold);
+  color: var(--gold-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 185, 0, 0.2);
+}
+
+.reward-reset-btn:active {
+  transform: translateY(1px);
+}
+
+/* 4. Understated Brand Section */
 .reward-brand-section {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-top: 8px;
-  opacity: 0.78;
+  gap: 7px;
+  opacity: 0.85;
+  margin-top: 2px;
 }
 
 .reward-mini-logo {
   width: auto;
-  height: 22px;
+  height: 20px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(255, 185, 0, 0.15));
+  filter: drop-shadow(0 2px 4px rgba(255, 185, 0, 0.2));
 }
 
 .reward-brand-text {
@@ -816,7 +1126,7 @@ h1 {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.16em;
-  color: #7A7264;
+  color: var(--text-muted);
   text-transform: uppercase;
 }
 
@@ -827,13 +1137,15 @@ h1 {
 
 /* =========================================================================
    FULL-SCREEN CONFETTI CELEBRATION OVERLAY
-   Renders across the entire viewport (in front of the white card & background)
    ========================================================================= */
 .fullscreen-confetti-overlay {
   position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 99999;
   overflow: hidden;
@@ -846,7 +1158,6 @@ h1 {
   animation-fill-mode: forwards;
 }
 
-/* 1. Downward Cascading Stream (Drifts in 3D right over the card) */
 @keyframes confetti-cascade {
   0% {
     transform: translate3d(var(--x-start), -30px, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
@@ -864,7 +1175,6 @@ h1 {
   }
 }
 
-/* 2. Left Cannon Arc (Blasts up/inward then drops under gravity) */
 @keyframes confetti-cannon-left {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg) scale(0.3);
@@ -886,7 +1196,6 @@ h1 {
   }
 }
 
-/* 3. Right Cannon Arc (Blasts up/inward from right then drops) */
 @keyframes confetti-cannon-right {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg) scale(0.3);
@@ -908,7 +1217,6 @@ h1 {
   }
 }
 
-/* 4. Center Radial Burst */
 @keyframes confetti-burst-radial {
   0% {
     transform: translate3d(var(--cx), var(--cy), 0) scale(0.2);
@@ -930,40 +1238,35 @@ h1 {
   }
 }
 
-/* Discreet Reset Demo Button (Centered on Desktop and Mobile) */
+/* Discreet Reset Demo Button (Internal to reward card) */
 .reset-wrap {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin-top: 22px;
-  text-align: center;
+  display: none !important;
 }
 
 .reset-demo-btn {
   display: inline-flex;
-  margin: 0 auto;
-  padding: 8px 18px;
+  padding: 8px 22px;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  border: 1px solid rgba(255, 185, 0, 0.28);
+  border: 1px solid rgba(184, 115, 0, 0.28);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #b0aa9e;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--text-body);
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .reset-demo-btn:hover {
-  background: rgba(255, 185, 0, 0.12);
+  background: #FFFFFF;
   border-color: var(--gold);
-  color: var(--gold);
-  box-shadow: 0 4px 14px rgba(255, 185, 0, 0.2);
+  color: var(--gold-dark);
+  box-shadow: 0 4px 14px rgba(255, 185, 0, 0.24);
   transform: translateY(-1px);
 }
 
@@ -975,120 +1278,233 @@ h1 {
 .footer-note {
   display: flex;
   margin-top: auto;
-  padding-top: 26px;
+  padding-top: 20px;
   align-items: center;
   gap: 8px;
-  color: #635f56;
+  color: var(--text-muted);
   font-family: var(--sans);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.18em;
+  text-align: center;
 }
 
 .footer-note span {
   color: var(--gold);
 }
 
-/* Responsive Adaptations */
-@media (max-width: 480px) {
+/* Accessibility: Respect Reduced-Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .confetti-particle {
+    display: none !important;
+  }
+}
+
+/* Tablet Adaptations */
+@media (max-width: 900px) {
   .page-wrap {
-    width: min(100% - 28px, 440px);
-    padding-top: 22px;
-    padding-bottom: 18px;
-  }
-
-  .brand-logo {
-    height: clamp(54px, 10vh, 68px);
-  }
-
-  .hero-intro {
-    margin-top: clamp(16px, 3vh, 26px);
-  }
-
-  h1 {
-    font-size: clamp(28px, 7vw, 36px);
-  }
-
-  .white-container-wrap {
-    margin-top: clamp(20px, 4vh, 32px);
-  }
-
-  .white-container {
-    min-height: 350px;
-    padding: 20px 16px 18px;
-  }
-
-  .game-title {
-    font-size: 20px;
-  }
-
-  .game-subtitle {
-    font-size: 12px;
-    margin-bottom: 12px;
-  }
-
-  .intro-illustration {
-    margin: 2px 0 10px;
-    transform: scale(0.9);
-  }
-
-  .game-instruction {
-    font-size: 11px;
-    margin-bottom: 14px;
-  }
-
-  .btn-action {
-    padding: 10px 24px;
-    font-size: 12px;
+    width: min(96vw, 860px);
   }
 
   .game-play-area {
-    height: 255px;
+    height: clamp(400px, 58vh, 560px);
+  }
+
+  .bucket-layer {
+    width: 110px;
+    height: 110px;
+  }
+}
+
+/* Mobile Adaptations */
+@media (max-width: 600px) {
+  .page-wrap {
+    width: min(100% - 20px, 100%);
+    padding-top: 12px;
+    padding-bottom: 14px;
+  }
+
+  .brand-logo {
+    height: clamp(46px, 7vh, 58px);
+  }
+
+  .white-container.is-intro {
+    padding: 18px 14px 16px;
+    min-height: auto;
+  }
+
+  .white-container.is-playing {
+    padding: 12px 10px 14px;
+  }
+
+  .intro-logo {
+    height: clamp(42px, 6vh, 52px);
+    max-width: 120px;
+  }
+
+  .intro-logo-wrap {
+    margin-bottom: 6px;
+  }
+
+  .intro-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+  }
+
+  .intro-heading {
+    font-size: clamp(23px, 6vw, 29px);
+    margin-bottom: 4px;
+  }
+
+  .game-title {
+    font-size: 19px;
+    margin-bottom: 6px;
+  }
+
+  .game-subtitle {
+    font-size: 12.5px;
+    margin-bottom: 12px;
+  }
+
+  .intro-bucket-wrap {
+    width: 130px;
+    height: 115px;
+    margin: 8px auto 14px;
+  }
+
+  .intro-instruction-wrap {
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .game-instruction {
+    font-size: 11.5px;
+  }
+
+  .start-game-btn {
+    padding: 12px 36px;
+    font-size: 13px;
+  }
+
+  .btn-intro-reset {
+    padding: 7px 20px;
+    font-size: 11px;
+  }
+
+  /* Responsive playfield height targeting 55-65svh */
+  .game-play-area {
+    height: clamp(380px, 58svh, 540px);
     margin-top: 8px;
   }
 
   .hud-pill {
-    padding: 5px 12px;
+    min-width: 95px;
+    height: 36px;
+    padding: 4px 12px;
+    gap: 6px;
     font-size: 10px;
+    border-radius: 999px;
   }
 
   .hud-value {
-    font-size: 13px;
+    font-size: 13.5px;
   }
 
-  .player-bucket {
-    width: 66px;
-    height: 42px;
+  .hud-title-eyebrow {
+    font-size: 8px;
+  }
+
+  .hud-title-main {
+    font-size: 12px;
+  }
+
+  .falling-food-item .food-img {
+    width: 60px;
+    height: 48px;
+  }
+
+  .falling-food-item .food-name-tag {
+    font-size: 9.5px;
+    padding: 2px 7px;
+    margin-top: 2px;
+  }
+
+  .bucket-layer {
+    width: 90px;
+    height: 90px;
     bottom: 6px;
   }
 
   .bucket-drag-indicator {
-    bottom: 52px;
+    bottom: 64px;
     font-size: 8.5px;
   }
 
+  .white-container.is-results,
+  .white-container.is-revealed {
+    padding: 18px 14px;
+    min-height: auto;
+  }
+
   .reward-card {
-    padding: 20px 14px 16px;
+    max-width: 100%;
+    padding: 20px 16px 16px;
   }
 
-  .reward-featured-panel {
-    padding: 15px 12px 14px;
+  .reward-result-header {
+    margin-bottom: 12px;
   }
 
-  .reward-congrats-title {
-    font-size: 20px;
+  .reward-kicker {
+    font-size: 11px;
   }
 
-  .reward-panel-title {
-    font-size: 18px;
+  .reward-score-heading {
+    font-size: 21px;
   }
 
-  .reward-panel-desc {
+  .reward-score-summary {
+    font-size: 12px;
+  }
+
+  .reward-offer-card {
+    padding: 14px 12px 12px;
+    margin-bottom: 14px;
+  }
+
+  .reward-offer-badge {
+    font-size: 9px;
+    padding: 3px 10px;
+  }
+
+  .reward-offer-title {
+    font-size: 17px;
+  }
+
+  .reward-offer-desc {
     font-size: 11.5px;
   }
 
+  .reward-actions {
+    max-width: 100%;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
   .play-again-btn {
-    padding: 8px 22px;
+    padding: 10px 20px;
+    font-size: 12px;
+  }
+
+  .reward-reset-btn {
+    padding: 9px 18px;
     font-size: 11.5px;
   }
 }

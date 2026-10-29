@@ -1,22 +1,28 @@
-# Soofi Mandi — Catch the Feast Mini-Game & Offer Reveal Demo
+# Soofi Mandi — Catch the Feast & Offer Reveal Demo
 
-A high-end, responsive interactive mini-game designed for client presentation and offer reveals.
+A high-end, responsive interactive restaurant mini-game and offer reveal designed for the Soofi Mandi client presentation.
 
 ## Overview & Game Mechanics
 - **Title**: **Catch the Feast**
-- **Objective**: Players control a handcrafted Mandi bucket horizontally using mouse or touch dragging to catch falling delicacies (roasted chicken, saffron rice, spiced lamb, cardamom garnish).
+- **Objective**: Players control a handcrafted Mandi bucket horizontally using mouse or touch dragging to catch delicious Mandi platters falling from above.
+- **Three Authentic Mandi Delicacies**:
+  1. **Chicken Mandi** (`assets/chicken-mandi.png`)
+  2. **Beef Mandi** (`assets/beef-mandi.png`)
+  3. **Mutton Mandi** (`assets/mutton-mandi.png`)
+- **Player's Catching Bucket**: Handcrafted Mandi Bucket (`assets/mandi-bucket.png`) with responsive, zero-jump touch drag and accurate rim collision detection.
 - **Unlimited Scoring**: Players catch as many delicacies as possible during a 12-second round. Every catch awards +1 point immediately. No target limit or minimum score is required.
-- **Timer**: 12-second round with live countdown and urgency cues.
+- **Timer**: Exactly 12-second round with live countdown on the status HUD. The round ends strictly when the 12s timer expires.
 - **Results & Offer Reveal**: When time expires, the player's actual final score is displayed ("TIME'S UP!", "YOUR SCORE: X", "You caught X food items!"), followed by a smooth transition to the prominent gold-accented restaurant offer reveal card.
-- **Full-Screen Confetti Celebration**: A gold-and-white confetti celebration cascades across the entire viewport, visibly showering in front of the white card and over the black background.
+- **Full-Screen Confetti Celebration**: A gold, cream, and white confetti celebration cascades across the entire viewport, visibly showering in front of the white card.
 - **Controls**:
-  - **Play Again**: Restarts a clean new 12-second round immediately.
-  - **Reset Demo**: Horizontally centered below the main card, returns to the initial introduction screen and clears all active game states, timers, and confetti.
+  - **Start Game**: Prominent gold-accented button starting the 12-second gameplay round.
+  - **Play Again**: Restarts a clean new 12-second round immediately with fresh state.
+  - **Reset Demo**: Horizontally centered below the main card using flexbox, returns cleanly to the initial introduction screen and clears all active game states, timers, and confetti.
 
 ## Visual Design & Brand Identity
-- **Color Palette**: Near-black background (`#0B0B0B`), primary brand gold (`#FFB900`), and a prominent pure white interaction card (`#FFFFFF`).
-- **Typography**: Consistent **Poppins** (`Arial, sans-serif` fallback) across all headings, HUD labels, offer panels, buttons, and footers.
-- **Future Image Support**: `FOOD_CONFIG` in `app.js` is structured so transparent PNG/WebP food photography can be dropped into the `assets/` folder with seamless SVG fallbacks.
+- **Color Palette**: Solid white background (`#FFFFFF`), primary brand gold (`#FFB900`), and dark Yemeni brown typography (`#2A1706`).
+- **Typography**: Consistent **Poppins** across all headings, HUD labels, buttons, score, timer, and offer content.
+- **Assets**: Authentic transparent PNG photography preserving exact proportions and transparency.
 
 ## Editing Offers
 Open `offers.js` to modify the placeholder promotion details:

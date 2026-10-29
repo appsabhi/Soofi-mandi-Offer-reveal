@@ -11,14 +11,19 @@
   const rewardCard = document.getElementById("reward-card");
 
   // Game UI & HUD Elements
-  const playNowBtn = document.getElementById("play-now-btn");
+  const startGameBtn = document.getElementById("start-game-btn") || document.getElementById("play-now-btn");
   const playAgainBtn = document.getElementById("play-again-btn");
   const resetBtn = document.getElementById("reset-btn");
+  const introResetBtn = document.getElementById("intro-reset-btn");
+  const rewardResetBtn = document.getElementById("reward-reset-btn");
   const gameTimerEl = document.getElementById("game-timer");
   const gameScoreEl = document.getElementById("game-score");
   const gamePlayArea = document.getElementById("game-play-area");
   const fallingItemsLayer = document.getElementById("falling-items-layer");
-  const playerBucket = document.getElementById("player-bucket");
+
+  // 3D Layered Bucket Elements
+  const bucketRear = document.getElementById("bucket-rear");
+  const bucketFront = document.getElementById("bucket-front");
   const bucketDragIndicator = document.getElementById("bucket-drag-indicator");
 
   // Results & Offer Display Elements
@@ -36,84 +41,103 @@
   const demoOffers = window.SOOFI_MANDI_DEMO_OFFERS || window.SOOfiMandiOffers || [];
   let currentOffer = null;
 
-  // Game Parameters
-  const GAME_DURATION = 12.0; // 12 seconds round
+  // =========================================================================
+  // GAME CONFIGURATION (Configurable parameters)
+  // =========================================================================
+  const GAME_CONFIG = {
+    duration: 12.0, // Exactly 12 seconds round
+    minSpawnInterval: 0.45, // Seconds between food spawns
+    maxSpawnInterval: 0.70,
+    minFallSpeedDesktop: 175, // Pixels per second on spacious desktop
+    maxFallSpeedDesktop: 235,
+    minFallSpeedMobile: 150,
+    maxFallSpeedMobile: 200,
+    maxConcurrentFoodDesktop: 7, // Kept active and lively across wide playfield
+    maxConcurrentFoodMobile: 5
+  };
 
-  // Game Runtime State (Unlimited scoring, round ends strictly on timer expiry)
+  /**
+   * Exactly 3 types of authentic falling mandi delicacies:
+   * 1. Chicken Mandi — chicken-mandi.png
+   * 2. Beef Mandi — beef-mandi.png
+   * 3. Mutton Mandi — mutton-mandi.png
+   */
+  const FOOD_TYPES = [
+    {
+      id: "chicken-mandi",
+      name: "Chicken Mandi",
+      image: "assets/chicken-mandi.png"
+    },
+    {
+      id: "beef-mandi",
+      name: "Beef Mandi",
+      image: "assets/beef-mandi.png"
+    },
+    {
+      id: "mutton-mandi",
+      name: "Mutton Mandi",
+      image: "assets/mutton-mandi.png"
+    }
+  ];
+
+  // Game Runtime State
   let gameState = "intro"; // "intro" | "playing" | "results" | "revealed"
-  let timeLeft = GAME_DURATION;
+  let roundStartTime = 0;
+  let timeLeft = GAME_CONFIG.duration;
   let score = 0;
   let gameAnimId = null;
   let lastFrameTime = 0;
   let spawnCooldown = 0;
+  let lastSpawnX = -999;
   let fallingItems = [];
   let confettiCleanupTimer = null;
+  let offerTransitionTimer = null;
 
-  // Bucket Physics State
+  // Bucket Physics & Interaction State
   let bucketX = 0; // Horizontal center of bucket relative to play area
-  let lastBucketX = 0;
   let isDraggingBucket = false;
+  let dragOffsetX = 0;
   let hasMovedBucket = false;
 
-  /**
-   * =========================================================================
-   * FOOD ASSETS CONFIGURATION (Future Real Photography Support)
-   * =========================================================================
-   * To drop in real transparent PNG or WebP photographs:
-   * 1. Place the transparent image files into the `assets/` folder.
-   * 2. Set the `image` property below to the relative path (e.g. "assets/mandi-chicken.png").
-   * 3. The game engine loads the image with `object-fit: contain`.
-   * 4. If the image is not found or fails to load, the vector SVG fallback renders seamlessly!
-   * =========================================================================
-   */
-  const FOOD_CONFIG = [
-    {
-      id: "roasted-chicken",
-      name: "Roasted Chicken",
-      image: "", // Configure real image path here (e.g. "assets/food-chicken.png")
-      fallbackSvg: `<svg viewBox="0 0 36 36"><defs><linearGradient id="g-roast" x1="0%" y1="0%" x2="1" y2="1"><stop offset="0%" stop-color="#E07A00"/><stop offset="50%" stop-color="#B84D00"/><stop offset="100%" stop-color="#6E2B00"/></linearGradient></defs><g transform="translate(3,3)"><path d="M 10 9 C 4 13 2 20 6 25 C 10 30 18 30 22 24 C 26 18 24 11 18 8 Z" fill="url(#g-roast)"/><rect x="19" y="23" width="4" height="9" rx="1.5" fill="#FDE68A" stroke="#B84D00" stroke-width="0.6" transform="rotate(-30 21 27)"/><circle cx="26" cy="30" r="2.2" fill="#FDE68A"/><circle cx="29" cy="27" r="2.2" fill="#FDE68A"/></g></svg>`
-    },
-    {
-      id: "saffron-rice",
-      name: "Saffron Rice Bowl",
-      image: "", // Configure real image path here (e.g. "assets/food-rice.png")
-      fallbackSvg: `<svg viewBox="0 0 36 36"><g transform="translate(1,2)"><ellipse cx="17" cy="18" rx="14" ry="7" fill="#FFFBEB" stroke="#B45309" stroke-width="1.2"/><path d="M 3 18 Q 17 30 31 18 Z" fill="#D97706"/><ellipse cx="17" cy="16" rx="11" ry="5" fill="#FEF3C7"/><circle cx="13" cy="16" r="1.4" fill="#92400E"/><circle cx="18" cy="15" r="1.4" fill="#92400E"/><circle cx="21" cy="17" r="1.1" fill="#059669"/><ellipse cx="17" cy="13" rx="5" ry="2" fill="#FDE68A"/></g></svg>`
-    },
-    {
-      id: "spiced-lamb",
-      name: "Spiced Mandi Meat",
-      image: "", // Configure real image path here (e.g. "assets/food-lamb.png")
-      fallbackSvg: `<svg viewBox="0 0 36 36"><g transform="translate(2,2)"><path d="M 8 10 C 14 6 22 7 26 12 C 30 17 29 25 24 28 C 18 31 10 29 7 23 C 4 17 5 12 8 10 Z" fill="#78350F" stroke="#9A3412" stroke-width="1"/><path d="M 12 12 Q 18 10 22 14" stroke="#FBBF24" stroke-width="1.2" fill="none"/><circle cx="15" cy="17" r="1.5" fill="#D97706"/><circle cx="20" cy="22" r="1.5" fill="#D97706"/></g></svg>`
-    },
-    {
-      id: "cardamom-spice",
-      name: "Cardamom & Garnishes",
-      image: "", // Configure real image path here (e.g. "assets/food-cardamom.png")
-      fallbackSvg: `<svg viewBox="0 0 36 36"><g transform="translate(2,2)"><path d="M 16 4 C 23 12 23 24 16 32 C 9 24 9 12 16 4 Z" fill="#15803D" stroke="#166534" stroke-width="1.2"/><path d="M 16 6 L 16 30" stroke="#86EFAC" stroke-width="1"/><path d="M 12 16 Q 16 18 20 16" stroke="#86EFAC" stroke-width="0.8" fill="none"/></g></svg>`
-    }
-  ];
+  // Device-specific element dimensions scaled to the enlarged playfield
+  function getPlayfieldMetrics() {
+    const width = window.innerWidth;
+    const isMobile = width < 600;
+    const isTablet = width >= 600 && width < 900;
 
-  // Reusable food element factory with graceful image fallback
-  function createFoodElement(config) {
-    const el = document.createElement("div");
-    el.className = "falling-food-item";
-    el.setAttribute("role", "img");
-    el.setAttribute("aria-label", config.name);
+    let bucketWidth = 130;
+    let bucketHeight = 130;
+    let imageWidth = 82;
+    let imageHeight = 64;
+    let labelHeight = 22;
 
-    if (config.image && typeof config.image === "string" && config.image.trim() !== "") {
-      const img = document.createElement("img");
-      img.src = config.image;
-      img.alt = config.name;
-      img.className = "food-img";
-      img.onerror = () => {
-        // Fallback to vector SVG if image file is missing or fails
-        el.innerHTML = config.fallbackSvg;
-      };
-      el.appendChild(img);
-    } else {
-      el.innerHTML = config.fallbackSvg;
+    if (isMobile) {
+      bucketWidth = 90;
+      bucketHeight = 90;
+      imageWidth = 60;
+      imageHeight = 48;
+      labelHeight = 18;
+    } else if (isTablet) {
+      bucketWidth = 110;
+      bucketHeight = 110;
+      imageWidth = 72;
+      imageHeight = 56;
+      labelHeight = 20;
     }
-    return el;
+
+    const containerWidth = Math.max(imageWidth, 90);
+    const containerHeight = imageHeight + labelHeight + 4;
+
+    return {
+      isMobile,
+      isTablet,
+      bucketWidth,
+      bucketHeight,
+      imageWidth,
+      imageHeight,
+      containerWidth,
+      containerHeight
+    };
   }
 
   // Populate placeholder demo offer
@@ -128,8 +152,8 @@
   }
   applyOfferContent();
 
-  // Switch between clean game views inside the white container
-  function switchView(targetView) {
+  // Switch between clean game views and update container layout class
+  function switchView(targetView, stateName) {
     const allViews = [viewIntro, viewPlaying, viewResults];
     allViews.forEach((v) => {
       if (v) {
@@ -142,30 +166,64 @@
       targetView.classList.add("is-active");
       targetView.setAttribute("aria-hidden", "false");
     }
-  }
 
-  // Position Player Bucket Horizontally (Restricted within play area margins)
-  function setBucketPosition(clientX) {
-    if (!gamePlayArea || !playerBucket) return;
-    const rect = gamePlayArea.getBoundingClientRect();
-    const halfWidth = playerBucket.offsetWidth / 2 || 38;
-    const rawX = clientX - rect.left;
-    const newX = Math.max(halfWidth + 4, Math.min(rect.width - halfWidth - 4, rawX));
+    document.body.classList.remove("state-intro", "state-playing", "state-results", "state-revealed");
+    document.body.classList.add(`state-${stateName}`);
 
-    // Tilt bucket slightly in direction of movement
-    const dx = newX - bucketX;
-    if (dx > 2) {
-      playerBucket.classList.remove("is-moving-left");
-      playerBucket.classList.add("is-moving-right");
-    } else if (dx < -2) {
-      playerBucket.classList.remove("is-moving-right");
-      playerBucket.classList.add("is-moving-left");
-    } else {
-      playerBucket.classList.remove("is-moving-left", "is-moving-right");
+    const pageWrap = document.querySelector(".page-wrap");
+    if (pageWrap) {
+      pageWrap.classList.remove("is-intro", "is-playing", "is-results", "is-revealed");
+      pageWrap.classList.add(`is-${stateName}`);
     }
 
+    if (container && stateName) {
+      container.classList.remove("is-intro", "is-playing", "is-results", "is-revealed");
+      container.classList.add(`is-${stateName}`);
+    }
+
+    const brandHeader = document.querySelector(".brand-header");
+    if (brandHeader) {
+      brandHeader.style.display = (stateName === "playing") ? "flex" : "none";
+    }
+
+    const resetWrap = document.querySelector(".reset-wrap");
+    if (resetWrap) {
+      resetWrap.style.display = "none";
+    }
+  }
+
+  // Position Player Bucket Horizontally (Both rear & front layers synchronized)
+  function setBucketPosition(clientX, offset = 0) {
+    if (!gamePlayArea || !bucketFront) return;
+    const rect = gamePlayArea.getBoundingClientRect();
+    const metrics = getPlayfieldMetrics();
+    const halfWidth = metrics.bucketWidth / 2;
+
+    const rawX = clientX - rect.left - offset;
+    const minX = halfWidth + 6;
+    const maxX = rect.width - halfWidth - 6;
+    const newX = Math.max(minX, Math.min(maxX, rawX));
+
+    // Slight dynamic tilt in movement direction for feedback
+    const dx = newX - bucketX;
+    const isLeft = dx < -2;
+    const isRight = dx > 2;
+
+    [bucketRear, bucketFront].forEach((b) => {
+      if (!b) return;
+      if (isRight) {
+        b.classList.remove("is-moving-left");
+        b.classList.add("is-moving-right");
+      } else if (isLeft) {
+        b.classList.remove("is-moving-right");
+        b.classList.add("is-moving-left");
+      } else {
+        b.classList.remove("is-moving-left", "is-moving-right");
+      }
+      b.style.left = `${newX}px`;
+    });
+
     bucketX = newX;
-    playerBucket.style.left = `${bucketX}px`;
 
     if (!hasMovedBucket && bucketDragIndicator) {
       hasMovedBucket = true;
@@ -174,92 +232,143 @@
   }
 
   function centerBucket() {
-    if (!gamePlayArea || !playerBucket) return;
+    if (!gamePlayArea) return;
     const rect = gamePlayArea.getBoundingClientRect();
     bucketX = rect.width / 2;
-    lastBucketX = bucketX;
-    playerBucket.style.left = `${bucketX}px`;
-    playerBucket.classList.remove("is-moving-left", "is-moving-right");
+    [bucketRear, bucketFront].forEach((b) => {
+      if (!b) return;
+      b.style.left = `${bucketX}px`;
+      b.classList.remove("is-moving-left", "is-moving-right");
+    });
   }
 
-  // Spawn a Falling Food Item
+  /**
+   * Create falling food DOM element using the real PNG image + food name label beneath it.
+   * Both move together as a single unified falling object.
+   * Labels stay horizontal and readable without unwanted rotation.
+   */
+  function createFoodElement(config, metrics) {
+    const el = document.createElement("div");
+    el.className = "falling-food-item";
+    el.setAttribute("role", "img");
+    el.setAttribute("aria-label", config.name);
+
+    // Food platter PNG image
+    const img = document.createElement("img");
+    img.src = config.image;
+    img.alt = config.name;
+    img.className = "food-img";
+
+    // Food name tag placed directly beneath image
+    const label = document.createElement("span");
+    label.className = "food-name-tag";
+    label.textContent = config.name;
+
+    el.appendChild(img);
+    el.appendChild(label);
+
+    return el;
+  }
+
+  // Spawn a Falling Food Item from the top
   function spawnFoodItem() {
     if (!gamePlayArea || !fallingItemsLayer) return;
+    const metrics = getPlayfieldMetrics();
+    const maxAllowed = metrics.isMobile
+      ? GAME_CONFIG.maxConcurrentFoodMobile
+      : GAME_CONFIG.maxConcurrentFoodDesktop;
+
+    if (fallingItems.length >= maxAllowed) return;
+
     const rect = gamePlayArea.getBoundingClientRect();
-    const itemWidth = 36;
-    const itemHeight = 36;
+    // Random selection among the 3 authentic Mandi delicacies
+    const foodConfig = FOOD_TYPES[Math.floor(Math.random() * FOOD_TYPES.length)];
 
-    // Pick random food config item
-    const foodConfig = FOOD_CONFIG[Math.floor(Math.random() * FOOD_CONFIG.length)];
+    // Vary horizontal starting position across the spacious playfield
+    const minX = 18;
+    const maxX = Math.max(minX + 30, rect.width - metrics.containerWidth - 18);
 
-    // Random X constrained within playfield margins
-    const minX = 14;
-    const maxX = Math.max(minX + 20, rect.width - itemWidth - 14);
-    const startX = minX + Math.random() * (maxX - minX);
+    let startX = minX + Math.random() * (maxX - minX);
+    if (Math.abs(startX - lastSpawnX) < metrics.containerWidth * 1.4) {
+      // Re-distribute to prevent consecutive items dropping on the exact same vertical track
+      startX = startX > rect.width / 2
+        ? minX + Math.random() * (rect.width / 2 - minX - metrics.containerWidth)
+        : rect.width / 2 + Math.random() * (maxX - rect.width / 2);
+      startX = Math.max(minX, Math.min(maxX, startX));
+    }
+    lastSpawnX = startX;
 
-    // Varied fall speed: 155px/s to 215px/s
-    const speed = 155 + Math.random() * 60;
-    const rotSpeed = (Math.random() - 0.5) * 60;
+    // Natural fall speed scaled to playfield height
+    const minSpeed = metrics.isMobile ? GAME_CONFIG.minFallSpeedMobile : GAME_CONFIG.minFallSpeedDesktop;
+    const maxSpeed = metrics.isMobile ? GAME_CONFIG.maxFallSpeedMobile : GAME_CONFIG.maxFallSpeedDesktop;
+    const speed = minSpeed + Math.random() * (maxSpeed - minSpeed);
 
-    const el = createFoodElement(foodConfig);
-    el.style.transform = `translate3d(${startX}px, -36px, 0)`;
+    const el = createFoodElement(foodConfig, metrics);
+    const startY = -metrics.containerHeight;
+    el.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
     fallingItemsLayer.appendChild(el);
 
     fallingItems.push({
       el,
       x: startX,
-      y: -36,
-      width: itemWidth,
-      height: itemHeight,
+      y: startY,
+      imageHeight: metrics.imageHeight,
+      containerWidth: metrics.containerWidth,
+      containerHeight: metrics.containerHeight,
       vy: speed,
-      rot: (Math.random() - 0.5) * 30,
-      vrot: rotSpeed,
       caught: false
     });
   }
 
-  // Handle successful item catch
+  // Handle successful item catch — Food visibly drops into the open bucket interior
   function handleCatch(item, index) {
+    if (item.caught || gameState !== "playing") return;
+
     item.caught = true;
     score++;
 
-    // Update Live Score on HUD immediately with pop effect
+    // Update Live Score on HUD immediately with pop animation
     if (gameScoreEl) {
-      gameScoreEl.textContent = score;
+      gameScoreEl.textContent = String(score);
       gameScoreEl.classList.remove("pop");
-      void gameScoreEl.offsetWidth; // Reflow for restart
+      void gameScoreEl.offsetWidth; // Reflow to re-trigger CSS keyframe
       gameScoreEl.classList.add("pop");
     }
 
-    // Trigger visual pop on the caught food item
-    item.el.style.setProperty("--current-transform", `translate3d(${item.x}px, ${item.y}px, 0) rotate(${item.rot}deg)`);
+    // Trigger visual pop animation on the caught food item:
+    // Food shrinks and moves down into the bucket cavity behind the front rim layer
+    const currentTransform = `translate3d(${item.x}px, ${item.y}px, 0)`;
+    item.el.style.setProperty("--current-transform", currentTransform);
     item.el.classList.add("is-caught");
 
-    // Spawn floating +1 popup at catch point
+    // Spawn floating +1 popup above the bucket rim
     const popup = document.createElement("div");
     popup.className = "catch-popup";
     popup.textContent = "+1";
-    popup.style.left = `${item.x + item.width / 2}px`;
+    popup.style.left = `${item.x + item.containerWidth / 2}px`;
     popup.style.top = `${item.y}px`;
     gamePlayArea.appendChild(popup);
 
     setTimeout(() => popup.remove(), 550);
 
+    // Clean up caught element from DOM
     setTimeout(() => {
       if (item.el && item.el.parentNode) {
         item.el.remove();
       }
-    }, 350);
+    }, 360);
 
+    // Remove from active physics array immediately so it can never award points twice
     fallingItems.splice(index, 1);
   }
 
-  // Clear all falling items from the DOM
+  // Clear all falling items from DOM and memory
   function clearFallingItems() {
     if (fallingItemsLayer) {
       fallingItemsLayer.innerHTML = "";
     }
     fallingItems = [];
+    lastSpawnX = -999;
   }
 
   // Main Game Loop (requestAnimationFrame)
@@ -270,8 +379,10 @@
     const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
     lastFrameTime = now;
 
-    // Timer countdown
-    timeLeft -= dt;
+    // Accurate elapsed-time calculation immune to frame drops
+    const elapsed = (now - roundStartTime) / 1000;
+    timeLeft = Math.max(0, GAME_CONFIG.duration - elapsed);
+
     if (timeLeft <= 0) {
       timeLeft = 0;
       updateTimerDisplay();
@@ -280,47 +391,59 @@
     }
     updateTimerDisplay();
 
-    // Spawn food items continuously across the 12-second round (every ~0.48s - 0.65s)
+    // Spawning cadence
     spawnCooldown -= dt;
     if (spawnCooldown <= 0) {
       spawnFoodItem();
-      spawnCooldown = 0.48 + Math.random() * 0.18;
+      spawnCooldown = GAME_CONFIG.minSpawnInterval + Math.random() * (GAME_CONFIG.maxSpawnInterval - GAME_CONFIG.minSpawnInterval);
     }
 
-    // Update falling items & collision detection
-    const isMobile = window.innerWidth < 480;
-    const bucketHalf = isMobile ? 33 : 38;
+    // Update falling items & accurate collision detection
+    const metrics = getPlayfieldMetrics();
     const areaRect = gamePlayArea.getBoundingClientRect();
-    const areaHeight = areaRect.height || 290;
-    const bucketTop = areaHeight - (isMobile ? 48 : 54);
-    const bucketCatchZoneBottom = bucketTop + 24;
-    const bucketLeft = bucketX - bucketHalf;
-    const bucketRight = bucketX + bucketHalf;
+    const areaHeight = areaRect.height || 500;
+
+    // 3D Bucket Rim Geometry:
+    // In mandi-bucket.png (1254x1254), back rim begins ~15.5% down from top.
+    // Front rim begins ~36.7% down from top.
+    const bucketTop = areaHeight - metrics.bucketHeight - 8;
+    const bucketRimTop = bucketTop + metrics.bucketHeight * 0.155;
+    const bucketFrontLip = bucketTop + metrics.bucketHeight * 0.367;
+
+    // Catch zone: Food platter enters into the bucket cavity
+    const catchTop = bucketRimTop - 4;
+    const catchBottom = bucketFrontLip + metrics.bucketHeight * 0.12;
+
+    // Bucket opening horizontal bounds (~80% of bucket width accounting for side padding)
+    const openingHalfWidth = metrics.bucketWidth * 0.40;
+    const bucketLeft = bucketX - openingHalfWidth;
+    const bucketRight = bucketX + openingHalfWidth;
 
     for (let i = fallingItems.length - 1; i >= 0; i--) {
       const item = fallingItems[i];
       if (item.caught) continue;
 
       item.y += item.vy * dt;
-      item.rot += item.vrot * dt;
-      item.el.style.transform = `translate3d(${item.x}px, ${item.y}px, 0) rotate(${item.rot}deg)`;
+      // Stable horizontal falling without label rotation
+      item.el.style.transform = `translate3d(${item.x}px, ${item.y}px, 0)`;
 
-      // Accurate Geometric Collision Check between item bottom and bucket opening
-      const itemBottom = item.y + item.height;
-      const itemCenter = item.x + item.width / 2;
+      // CRITICAL: Collision is calculated based strictly on the FOOD IMAGE reaching the bucket rim,
+      // NOT when the label enters the bucket!
+      const foodImageBottom = item.y + item.imageHeight * 0.90;
+      const foodCenter = item.x + item.containerWidth / 2;
 
       if (
-        itemBottom >= bucketTop &&
-        itemBottom <= bucketCatchZoneBottom &&
-        itemCenter >= bucketLeft - 10 &&
-        itemCenter <= bucketRight + 10
+        foodImageBottom >= catchTop &&
+        foodImageBottom <= catchBottom &&
+        foodCenter >= bucketLeft &&
+        foodCenter <= bucketRight
       ) {
         handleCatch(item, i);
         continue;
       }
 
-      // Remove items that leave the bottom of play area without scoring
-      if (item.y > areaHeight + 10) {
+      // Remove items that leave the bottom of the playfield without scoring
+      if (item.y > areaHeight + 25) {
         item.el.remove();
         fallingItems.splice(i, 1);
       }
@@ -329,13 +452,14 @@
     gameAnimId = requestAnimationFrame(gameLoop);
   }
 
+  // Update Countdown Display (format: "12s", "09s", etc.)
   function updateTimerDisplay() {
     if (!gameTimerEl) return;
     const seconds = Math.ceil(timeLeft);
     const formatted = seconds < 10 ? `0${seconds}s` : `${seconds}s`;
     gameTimerEl.textContent = formatted;
 
-    if (seconds <= 4) {
+    if (seconds <= 4 && seconds > 0) {
       gameTimerEl.parentElement.classList.add("is-warning");
     } else {
       gameTimerEl.parentElement.classList.remove("is-warning");
@@ -344,24 +468,28 @@
 
   // Start / Restart Catch the Feast game
   function startGame() {
-    // Cancel previous animations or timers
+    // Clear any previous animation loops, timers, or confetti
     if (gameAnimId) {
       cancelAnimationFrame(gameAnimId);
       gameAnimId = null;
     }
+    if (offerTransitionTimer) {
+      clearTimeout(offerTransitionTimer);
+      offerTransitionTimer = null;
+    }
     clearFallingItems();
     stopConfetti();
 
-    // Reset game state
+    // Reset game round state
     gameState = "playing";
-    timeLeft = GAME_DURATION;
+    timeLeft = GAME_CONFIG.duration;
     score = 0;
-    spawnCooldown = 0.25; // First food item spawns quickly
+    spawnCooldown = 0.22; // First food item spawns promptly
     lastFrameTime = 0;
     hasMovedBucket = false;
+    roundStartTime = performance.now();
 
     // Reset Container & Reward Card State
-    container.classList.remove("is-revealed");
     rewardCard.setAttribute("aria-hidden", "true");
 
     // Reset HUD
@@ -369,88 +497,93 @@
     if (bucketDragIndicator) bucketDragIndicator.classList.remove("is-hidden");
     updateTimerDisplay();
 
-    // Show Playing View
-    switchView(viewPlaying);
+    // Show Playing View with enlarged playfield & center bucket
+    switchView(viewPlaying, "playing");
     centerBucket();
 
-    // Start requestAnimationFrame loop
+    // Start single active requestAnimationFrame loop
     gameAnimId = requestAnimationFrame(gameLoop);
   }
 
   // End of Round: Triggered strictly when 12-second countdown expires
   function endGameRound() {
-    gameState = "results";
+    if (gameState !== "playing") return;
+    gameState = "revealed";
+
     if (gameAnimId) {
       cancelAnimationFrame(gameAnimId);
       gameAnimId = null;
     }
 
+    if (offerTransitionTimer) {
+      clearTimeout(offerTransitionTimer);
+      offerTransitionTimer = null;
+    }
+
     clearFallingItems();
 
-    // Preserve the actual final score
+    // Preserve the actual final score (including 0)
     const finalScore = score;
     const scoreSummaryText = finalScore === 1 ? "You caught 1 food item!" : `You caught ${finalScore} food items!`;
 
-    // 1. Update Results Interstitial Screen
+    // 1. Update Results Interstitial Screen (if queried)
     if (interstitialScoreVal) interstitialScoreVal.textContent = String(finalScore);
     if (interstitialScoreDesc) interstitialScoreDesc.textContent = scoreSummaryText;
 
-    // 2. Update Reward Card Score Section
+    // 2. Update Reward Card Score Section with exact final score
     if (rewardScoreNumber) rewardScoreNumber.textContent = String(finalScore);
     if (rewardScoreSummary) rewardScoreSummary.textContent = scoreSummaryText;
 
-    // 3. Show brief celebratory interstitial results screen
-    switchView(viewResults);
+    // 3. Immediately reveal the Offer Screen with result-bg.png & light card
+    switchView(null, "revealed");
+    rewardCard.setAttribute("aria-hidden", "false");
 
-    // 4. Trigger Full-Screen Confetti Celebration (In front of card & viewport)
+    // 4. Trigger Full-Screen Confetti Celebration (Once per completed round)
     triggerFullScreenConfetti();
-
-    // 5. Smoothly transition to the prominent Offer Reveal Screen
-    setTimeout(() => {
-      if (gameState !== "results") return;
-      gameState = "revealed";
-
-      container.classList.add("is-revealed");
-      rewardCard.setAttribute("aria-hidden", "false");
-    }, 1150);
   }
 
   /**
    * =========================================================================
    * FULL-SCREEN CONFETTI CELEBRATION OVERLAY
-   * Renders particles across the full viewport, passing visibly IN FRONT of the card!
+   * Renders particles across the full viewport, passing visibly IN FRONT of card!
    * =========================================================================
    */
   function triggerFullScreenConfetti() {
     if (!fullscreenConfettiOverlay) return;
 
+    // Respect reduced-motion preferences
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
     stopConfetti();
 
-    const goldWhitePalette = [
+    // Palette with vibrant gold, cream, white, and darker gold/bronze for visibility
+    const confettiPalette = [
       "#FFB900",
       "#FFC83B",
       "#FFE58F",
       "#FFFFFF",
       "#FFF8E7",
       "#E5A700",
-      "#FFF1B8"
+      "#B87800",
+      "#8F5600"
     ];
 
-    const isMobile = window.innerWidth < 480;
-    const cascadeCount = isMobile ? 32 : 54;
-    const cannonCount = isMobile ? 14 : 22;
-    const burstCount = isMobile ? 10 : 16;
+    const isMobile = window.innerWidth < 600;
+    const cascadeCount = isMobile ? 36 : 64;
+    const cannonCount = isMobile ? 14 : 26;
+    const burstCount = isMobile ? 12 : 20;
 
-    // 1. Top Cascading Shower (Visibly falls directly in front of the white card)
+    // 1. Top Cascading Shower
     for (let i = 0; i < cascadeCount; i++) {
       const piece = document.createElement("div");
       piece.className = "confetti-particle";
 
-      const color = goldWhitePalette[Math.floor(Math.random() * goldWhitePalette.length)];
+      const color = confettiPalette[Math.floor(Math.random() * confettiPalette.length)];
       piece.style.backgroundColor = color;
       piece.style.boxShadow = `0 1px 4px ${color}66`;
 
-      // Varied shapes: strips, squares, circles
       const shapeRand = Math.random();
       if (shapeRand < 0.55) {
         piece.style.width = `${6 + Math.random() * 4}px`;
@@ -468,8 +601,8 @@
         piece.style.borderRadius = "50%";
       }
 
-      const xStart = 4 + Math.random() * 92; // 4vw to 96vw
-      const lateralDrift = (Math.random() - 0.5) * (isMobile ? 60 : 140);
+      const xStart = 3 + Math.random() * 94; // 3vw to 97vw
+      const lateralDrift = (Math.random() - 0.5) * (isMobile ? 70 : 160);
       const rotX = (Math.random() - 0.5) * 1440;
       const rotY = (Math.random() - 0.5) * 1440;
       const rotZ = (Math.random() - 0.5) * 720;
@@ -491,7 +624,7 @@
       fullscreenConfettiOverlay.appendChild(piece);
     }
 
-    // 2. Left & Right Cannon Blasts (Shooting up & across the screen)
+    // 2. Left & Right Cannon Blasts
     for (let i = 0; i < cannonCount; i++) {
       spawnCannonPiece(true);
       spawnCannonPiece(false);
@@ -501,7 +634,7 @@
       const piece = document.createElement("div");
       piece.className = "confetti-particle";
 
-      const color = goldWhitePalette[Math.floor(Math.random() * goldWhitePalette.length)];
+      const color = confettiPalette[Math.floor(Math.random() * confettiPalette.length)];
       piece.style.backgroundColor = color;
       piece.style.boxShadow = `0 1px 4px ${color}66`;
 
@@ -514,13 +647,13 @@
       piece.style.left = isLeft ? "0px" : "100vw";
       piece.style.top = isMobile ? "75vh" : "70vh";
 
-      const minDx = isMobile ? 80 : 160;
-      const maxDx = isMobile ? 240 : 540;
+      const minDx = isMobile ? 80 : 180;
+      const maxDx = isMobile ? 240 : 600;
       const dxVal = minDx + Math.random() * (maxDx - minDx);
       const dx = isLeft ? dxVal : -dxVal;
 
-      const apexY = -(isMobile ? 180 + Math.random() * 140 : 260 + Math.random() * 260);
-      const fallY = isMobile ? 80 + Math.random() * 120 : 100 + Math.random() * 180;
+      const apexY = -(isMobile ? 180 + Math.random() * 140 : 280 + Math.random() * 280);
+      const fallY = isMobile ? 80 + Math.random() * 120 : 100 + Math.random() * 200;
       const rot = (isLeft ? 1 : -1) * (360 + Math.random() * 720);
 
       piece.style.setProperty("--dx", `${dx}px`);
@@ -539,12 +672,12 @@
       fullscreenConfettiOverlay.appendChild(piece);
     }
 
-    // 3. Center Burst (Explodes from card area outwards)
+    // 3. Center Burst
     for (let i = 0; i < burstCount; i++) {
       const piece = document.createElement("div");
       piece.className = "confetti-particle";
 
-      const color = goldWhitePalette[Math.floor(Math.random() * goldWhitePalette.length)];
+      const color = confettiPalette[Math.floor(Math.random() * confettiPalette.length)];
       piece.style.backgroundColor = color;
       piece.style.boxShadow = `0 1px 4px ${color}66`;
 
@@ -556,9 +689,9 @@
       const cx = 50; // 50vw
       const cy = isMobile ? 48 : 46; // vh
       const angle = Math.random() * Math.PI * 2;
-      const distance = (isMobile ? 70 : 160) + Math.random() * (isMobile ? 80 : 180);
+      const distance = (isMobile ? 70 : 180) + Math.random() * (isMobile ? 80 : 220);
       const dx = Math.cos(angle) * distance;
-      const dy = Math.sin(angle) * distance - 40; // bias upward
+      const dy = Math.sin(angle) * distance - 40; // Bias upward
       const rot = (Math.random() - 0.5) * 720;
 
       piece.style.setProperty("--cx", `${cx}vw`);
@@ -600,15 +733,18 @@
       cancelAnimationFrame(gameAnimId);
       gameAnimId = null;
     }
+    if (offerTransitionTimer) {
+      clearTimeout(offerTransitionTimer);
+      offerTransitionTimer = null;
+    }
     clearFallingItems();
     stopConfetti();
 
     gameState = "intro";
-    container.classList.remove("is-revealed");
     rewardCard.setAttribute("aria-hidden", "true");
 
     score = 0;
-    timeLeft = GAME_DURATION;
+    timeLeft = GAME_CONFIG.duration;
 
     if (gameScoreEl) gameScoreEl.textContent = "0";
     if (gameTimerEl) {
@@ -616,7 +752,7 @@
       gameTimerEl.parentElement.classList.remove("is-warning");
     }
 
-    switchView(viewIntro);
+    switchView(viewIntro, "intro");
   }
 
   // Bucket Drag Event Listeners (Pointer Events for Touch & Mouse)
@@ -625,24 +761,37 @@
       if (gameState !== "playing") return;
       event.preventDefault();
       isDraggingBucket = true;
+
+      const rect = gamePlayArea.getBoundingClientRect();
+      const currentTouchX = event.clientX - rect.left;
+      const metrics = getPlayfieldMetrics();
+
+      // If touched on or near bucket, smoothly track offset so the bucket NEVER jumps!
+      if (Math.abs(currentTouchX - bucketX) < metrics.bucketWidth * 0.8) {
+        dragOffsetX = currentTouchX - bucketX;
+      } else {
+        dragOffsetX = 0;
+        setBucketPosition(event.clientX, dragOffsetX);
+      }
+
       try {
         gamePlayArea.setPointerCapture(event.pointerId);
       } catch (_) {}
-      setBucketPosition(event.clientX);
     });
 
     gamePlayArea.addEventListener("pointermove", (event) => {
       if (gameState !== "playing") return;
       if (isDraggingBucket || event.pointerType === "mouse") {
-        setBucketPosition(event.clientX);
+        setBucketPosition(event.clientX, isDraggingBucket ? dragOffsetX : 0);
       }
     });
 
     const stopDraggingBucket = (event) => {
       isDraggingBucket = false;
-      if (playerBucket) {
-        playerBucket.classList.remove("is-moving-left", "is-moving-right");
-      }
+      dragOffsetX = 0;
+      [bucketRear, bucketFront].forEach((b) => {
+        if (b) b.classList.remove("is-moving-left", "is-moving-right");
+      });
       try {
         if (gamePlayArea.hasPointerCapture(event.pointerId)) {
           gamePlayArea.releasePointerCapture(event.pointerId);
@@ -655,40 +804,62 @@
 
     // Keyboard Controls for Bucket (Accessibility: Left/Right Arrow Keys)
     window.addEventListener("keydown", (event) => {
-      if (gameState !== "playing" || !playerBucket) return;
+      if (gameState !== "playing") return;
       const rect = gamePlayArea.getBoundingClientRect();
-      const halfWidth = playerBucket.offsetWidth / 2 || 38;
-      const step = 26;
+      const metrics = getPlayfieldMetrics();
+      const halfWidth = metrics.bucketWidth / 2;
+      const step = 32;
 
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        bucketX = Math.max(halfWidth + 4, bucketX - step);
-        playerBucket.style.left = `${bucketX}px`;
-        playerBucket.classList.remove("is-moving-right");
-        playerBucket.classList.add("is-moving-left");
+        const newX = Math.max(halfWidth + 6, bucketX - step);
+        [bucketRear, bucketFront].forEach((b) => {
+          if (!b) return;
+          b.style.left = `${newX}px`;
+          b.classList.remove("is-moving-right");
+          b.classList.add("is-moving-left");
+        });
+        bucketX = newX;
         if (bucketDragIndicator) bucketDragIndicator.classList.add("is-hidden");
       } else if (event.key === "ArrowRight") {
         event.preventDefault();
-        bucketX = Math.min(rect.width - halfWidth - 4, bucketX + step);
-        playerBucket.style.left = `${bucketX}px`;
-        playerBucket.classList.remove("is-moving-left");
-        playerBucket.classList.add("is-moving-right");
+        const newX = Math.min(rect.width - halfWidth - 6, bucketX + step);
+        [bucketRear, bucketFront].forEach((b) => {
+          if (!b) return;
+          b.style.left = `${newX}px`;
+          b.classList.remove("is-moving-left");
+          b.classList.add("is-moving-right");
+        });
+        bucketX = newX;
         if (bucketDragIndicator) bucketDragIndicator.classList.add("is-hidden");
       }
     });
 
     window.addEventListener("keyup", (event) => {
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-        if (playerBucket) {
-          playerBucket.classList.remove("is-moving-left", "is-moving-right");
-        }
+        [bucketRear, bucketFront].forEach((b) => {
+          if (b) b.classList.remove("is-moving-left", "is-moving-right");
+        });
       }
     });
   }
 
+  // Recalculate and clamp bucket on window resize
+  window.addEventListener("resize", () => {
+    if (gamePlayArea && bucketFront) {
+      const rect = gamePlayArea.getBoundingClientRect();
+      const metrics = getPlayfieldMetrics();
+      const halfWidth = metrics.bucketWidth / 2;
+      bucketX = Math.max(halfWidth + 6, Math.min(rect.width - halfWidth - 6, bucketX));
+      [bucketRear, bucketFront].forEach((b) => {
+        if (b) b.style.left = `${bucketX}px`;
+      });
+    }
+  });
+
   // Button Listeners
-  if (playNowBtn) {
-    playNowBtn.addEventListener("click", startGame);
+  if (startGameBtn) {
+    startGameBtn.addEventListener("click", startGame);
   }
 
   if (playAgainBtn) {
@@ -699,6 +870,14 @@
     resetBtn.addEventListener("click", resetDemo);
   }
 
+  if (introResetBtn) {
+    introResetBtn.addEventListener("click", resetDemo);
+  }
+
+  if (rewardResetBtn) {
+    rewardResetBtn.addEventListener("click", resetDemo);
+  }
+
   // Initialize strictly on the Intro Screen
-  switchView(viewIntro);
+  switchView(viewIntro, "intro");
 })();
