@@ -257,6 +257,13 @@ body.state-playing .white-container-wrap {
   transform: scale(1.02);
 }
 
+.front-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 /* 2. Eyebrow in gold */
 .intro-eyebrow {
   margin: 0 0 4px;
@@ -577,8 +584,10 @@ body:not(.state-intro) .intro-falling-food-wrap {
   margin-top: 16px;
   padding: 4px 0;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 8px;
-  color: var(--text-muted);
+  color: var(--gold-500);
   font-family: var(--sans);
   font-size: 10px;
   font-weight: 600;
@@ -592,8 +601,14 @@ body.state-revealed .footer-note {
   display: none;
 }
 
+.footer-item {
+  white-space: nowrap;
+}
+
+.footer-dot,
 .footer-note span {
   color: var(--gold-500);
+  user-select: none;
 }
 
 /* =========================================================================
@@ -1471,6 +1486,232 @@ body:not(.state-revealed):not(.state-results) .reward-card {
 
 /* Mobile Adaptations (Portrait Primary) */
 @media (max-width: 600px) {
+  /* Mobile Intro Screen: Responsive top-to-bottom layout */
+  body.state-intro {
+    overflow-y: auto;
+  }
+
+  body.state-intro .page-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: max(14px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    box-sizing: border-box;
+  }
+
+  body.state-intro .white-container-wrap {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 0;
+  }
+
+  body.state-intro .white-container.is-intro {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 0;
+  }
+
+  body.state-intro .game-view-intro {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 0;
+  }
+
+  /* 1. Logo at the very top with clean spacing */
+  body.state-intro .intro-logo-wrap {
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  /* Center the intro content vertically between top logo and bottom footer */
+  body.state-intro .front-centre {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+  }
+
+  body.state-intro .intro-heading {
+    margin-top: 0;
+  }
+
+  body.state-intro .intro-bucket-wrap {
+    margin: 6px auto 12px;
+  }
+
+  /* Controls below bucket */
+  body.state-intro .intro-actions {
+    margin-top: 10px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  /* 2. Footer items cleanly at the bottom */
+  body.state-intro .footer-note {
+    margin-top: 10px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 4px 8px;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    padding: 4px 0;
+  }
+
+  /* Mobile Gameplay: Top logo, flexible play area, bottom gold footer */
+  body.state-playing .page-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    box-sizing: border-box;
+  }
+
+  body.state-playing .brand-header {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    margin: 0 0 2px;
+    flex-shrink: 0;
+  }
+
+  body.state-playing .brand-logo {
+    height: clamp(44px, 6.5vh, 54px);
+    max-width: 160px;
+  }
+
+  body.state-playing .white-container-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  body.state-playing .white-container.is-playing {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.state-playing .game-view-playing {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.state-playing .game-hud {
+    flex-shrink: 0;
+  }
+
+  body.state-playing .game-play-area {
+    flex: 1 1 auto;
+    min-height: 240px;
+    height: 100%;
+    margin-top: 4px;
+  }
+
+  body.state-playing .footer-note {
+    display: flex !important;
+    margin-top: 4px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    padding: 2px 0;
+    color: var(--gold-500);
+  }
+
+  /* Mobile Results Screen: Top logo inside card, centered card, bottom gold footer */
+  body.state-revealed,
+  body.state-results {
+    overflow-y: auto;
+  }
+
+  body.state-revealed .page-wrap,
+  body.state-results .page-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    box-sizing: border-box;
+  }
+
+  body.state-revealed .white-container-wrap,
+  body.state-results .white-container-wrap {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+    width: 100%;
+  }
+
+  body.state-revealed .reward-card,
+  body.state-results .reward-card {
+    margin: auto 0;
+  }
+
+  /* Hide duplicate inner footer text on mobile since footer-note is visible at screen bottom */
+  body.state-revealed .reward-brand-section,
+  body.state-results .reward-brand-section {
+    display: none !important;
+  }
+
+  body.state-revealed .footer-note,
+  body.state-results .footer-note {
+    display: flex !important;
+    margin-top: 10px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    padding: 4px 0;
+    color: var(--gold-500);
+  }
+
   .page-wrap {
     padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   }
