@@ -143,12 +143,21 @@
   // Populate placeholder demo offer
   function applyOfferContent() {
     currentOffer = demoOffers[0] || {
+      badge: "✦ YOUR SPECIAL OFFER ✦",
       title: "Demo offer · To be confirmed",
       description: "Special promotion details will be updated soon."
     };
 
-    if (offerTitle) offerTitle.textContent = currentOffer.title;
-    if (offerDescription) offerDescription.textContent = currentOffer.description;
+    const offerBadgeEl = document.getElementById("offer-badge");
+    if (offerBadgeEl && currentOffer.badge) {
+      offerBadgeEl.textContent = currentOffer.badge;
+    }
+    if (offerTitle && currentOffer.title) {
+      offerTitle.textContent = currentOffer.title;
+    }
+    if (offerDescription && currentOffer.description) {
+      offerDescription.textContent = currentOffer.description;
+    }
   }
   applyOfferContent();
 

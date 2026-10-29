@@ -36,13 +36,23 @@ body {
   overflow-x: hidden;
 }
 
-/* Solid White Background on all three screens */
+/* Screen Backgrounds */
 body.state-intro,
-body.state-playing,
-body.state-results,
-body.state-revealed {
+body.state-playing {
   background-color: #FFFFFF;
   background-image: none;
+}
+
+/* Final Result & Offer Reveal: Subtle, warm ivory background with soft golden lighting */
+body.state-revealed,
+body.state-results {
+  background-color: #FAF6EF;
+  background-image:
+    radial-gradient(circle at 50% 12%, rgba(255, 201, 51, 0.22) 0%, rgba(255, 185, 0, 0.08) 38%, transparent 68%),
+    radial-gradient(circle at 10% 85%, rgba(255, 185, 0, 0.09) 0%, transparent 45%),
+    radial-gradient(circle at 90% 85%, rgba(255, 185, 0, 0.09) 0%, transparent 45%),
+    linear-gradient(180deg, #FDFBF8 0%, #FAF6EF 50%, #F5EFE2 100%);
+  background-attachment: fixed;
 }
 
 /* Page Wrapper — Uses full available viewport */
@@ -71,7 +81,7 @@ body.state-revealed .page-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .page-wrap:has(.white-container.is-intro) .brand-header,
@@ -82,10 +92,10 @@ body.state-revealed .page-wrap {
 .brand-logo {
   display: block;
   width: auto;
-  height: clamp(52px, 6.5vh, 70px);
-  max-width: 170px;
+  height: clamp(58px, 7.5vh, 76px);
+  max-width: 180px;
   object-fit: contain;
-  filter: drop-shadow(0 3px 10px rgba(184, 115, 0, 0.22));
+  filter: drop-shadow(0 4px 14px rgba(184, 115, 0, 0.28));
   user-select: none;
   -webkit-user-select: none;
   transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.25, 1);
@@ -206,10 +216,10 @@ body.state-revealed .page-wrap {
 .intro-logo {
   display: block;
   width: auto;
-  height: clamp(52px, 7vh, 68px);
-  max-width: 155px;
+  height: clamp(58px, 7.5vh, 74px);
+  max-width: 170px;
   object-fit: contain;
-  filter: drop-shadow(0 3px 8px rgba(184, 115, 0, 0.16));
+  filter: drop-shadow(0 4px 12px rgba(184, 115, 0, 0.22));
   user-select: none;
   -webkit-user-select: none;
   transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.25, 1);
@@ -426,18 +436,19 @@ body.state-revealed .page-wrap {
 }
 
 .hud-title-eyebrow {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--gold-deep);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #B87800;
   text-transform: uppercase;
+  margin-bottom: 1px;
 }
 
 .hud-title-main {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  color: var(--text-dark);
+  letter-spacing: 0.05em;
+  color: #2A1706;
   text-transform: uppercase;
 }
 
