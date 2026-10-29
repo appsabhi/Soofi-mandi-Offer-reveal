@@ -1,0 +1,21 @@
+{
+  "name": "soofi-mandi-catch-the-feast",
+  "version": "2.0.0",
+  "description": "Soofi Mandi — Catch the Feast interactive mini-game with global leaderboard, anonymous player tracking, and private owner analytics dashboard.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/test_game_server.js"
+  },
+  "keywords": [
+    "soofi-mandi",
+    "catch-the-feast",
+    "leaderboard",
+    "analytics"
+  ],
+  "author": "Soofi Mandi",
+  "license": "UNLICENSED",
+  "private": true
+}
+

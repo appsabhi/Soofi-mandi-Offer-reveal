@@ -16,7 +16,9 @@
   const resetBtn = document.getElementById("reset-btn");
   const introResetBtn = document.getElementById("intro-reset-btn");
   const rewardResetBtn = document.getElementById("reward-reset-btn");
-  const gameTimerEl = document.getElementById("game-timer");
+  const gameMissesEl = document.getElementById("game-misses");
+  const hudMissesEl = document.getElementById("hud-misses");
+  const hudMissWarningEl = document.getElementById("hud-miss-warning");
   const gameScoreEl = document.getElementById("game-score");
   const gamePlayArea = document.getElementById("game-play-area");
   const fallingItemsLayer = document.getElementById("falling-items-layer");
@@ -26,26 +28,264 @@
   const bucketFront = document.getElementById("bucket-front");
   const bucketDragIndicator = document.getElementById("bucket-drag-indicator");
 
-  // Results & Offer Display Elements
+  // Results, Loss & Offer Display Elements
   const interstitialScoreVal = document.getElementById("interstitial-score-val");
   const interstitialScoreDesc = document.getElementById("interstitial-score-desc");
   const rewardScoreNumber = document.getElementById("reward-score-number");
   const rewardScoreSummary = document.getElementById("reward-score-summary");
+  const rewardLossHeadline = document.getElementById("reward-loss-headline");
+  const rewardKicker = document.getElementById("reward-kicker");
+  const rewardOfferCard = document.getElementById("reward-offer-card");
   const offerTitle = document.getElementById("offer-title");
   const offerDescription = document.getElementById("offer-description");
 
   // Full-Screen Confetti Celebration Overlay
   const fullscreenConfettiOverlay = document.getElementById("fullscreen-confetti-overlay");
 
+  // Leaderboard & Player Identity Elements
+  const leaderboardModal = document.getElementById("leaderboard-modal");
+  const openLeaderboardBtn = document.getElementById("open-leaderboard-btn");
+  const resultLeaderboardBtn = document.getElementById("result-leaderboard-btn");
+  const closeLeaderboardBtn = document.getElementById("close-leaderboard-btn");
+  const doneLeaderboardBtn = document.getElementById("done-leaderboard-btn");
+  const playerNameInput = document.getElementById("player-name-input");
+  const saveNameBtn = document.getElementById("save-name-btn");
+  const playerChipName = document.getElementById("player-chip-display-name");
+  const playerChipEditBtn = document.getElementById("player-chip-edit-btn");
+  const introFallingFood = document.getElementById("intro-falling-food");
+
+  // =========================================================================
+  // ANONYMOUS FIRST-PARTY PLAYER IDENTIFICATION (Zero invasive fingerprinting)
+  // =========================================================================
+  function getOrCreateUUID(storage, key) {
+    try {
+      let val = storage.getItem(key);
+      if (!val) {
+        if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+          val = crypto.randomUUID();
+        } else {
+          val = "uuid-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 10);
+        }
+        storage.setItem(key, val);
+      }
+      return val;
+    } catch (_) {
+      return "anon-" + Date.now().toString(36);
+    }
+  }
+
+  const playerId = getOrCreateUUID(localStorage, "soofi_mandi_player_id");
+  let isNewSession = false;
+  let sessionId = "";
+  try {
+    sessionId = sessionStorage.getItem("soofi_mandi_session_id");
+    if (!sessionId) {
+      sessionId = getOrCreateUUID(sessionStorage, "soofi_mandi_session_id");
+      isNewSession = true;
+    }
+  } catch (_) {
+    sessionId = "sess-" + Date.now().toString(36);
+  }
+
+  function getStoredDisplayName() {
+    try {
+      let name = localStorage.getItem("soofi_mandi_display_name");
+      if (!name) {
+        const suffix = Math.floor(1000 + Math.random() * 9000);
+        name = `MandiGuest_${suffix}`;
+        localStorage.setItem("soofi_mandi_display_name", name);
+      }
+      return name;
+    } catch (_) {
+      return "MandiGuest";
+    }
+  }
+
+  let playerDisplayName = getStoredDisplayName();
+  let playerPersonalBest = 0;
+  try {
+    playerPersonalBest = parseInt(localStorage.getItem("soofi_mandi_pb") || "0", 10) || 0;
+  } catch (_) {}
+
+  // =========================================================================
+  // PRIVACY-CONSCIOUS WEBSITE ACTIVITY TRACKING
+  // =========================================================================
+  function trackEvent(eventName, metadata = {}) {
+    try {
+      const payload = {
+        playerId,
+        sessionId,
+        eventName,
+        metadata: metadata || {}
+      };
+
+      if (eventName === "game_abandon" && typeof navigator !== "undefined" && navigator.sendBeacon) {
+        const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+        navigator.sendBeacon("/api/analytics/events", blob);
+        return;
+      }
+
+      fetch("/api/analytics/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).catch(() => {
+        // Resilient: gracefully ignore offline/network errors
+      });
+    } catch (_) {}
+  }
+
+  // =========================================================================
+  // GLOBAL LEADERBOARD INTEGRATION (Top 10 + Deterministic Tie-breaking)
+  // =========================================================================
+  function formatTimeAgo(isoString) {
+    try {
+      const diffSec = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+      if (isNaN(diffSec) || diffSec < 0) return "just now";
+      if (diffSec < 60) return "just now";
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+      return `${Math.floor(diffSec / 86400)}d ago`;
+    } catch (_) {
+      return "recently";
+    }
+  }
+
+  async function fetchLeaderboard() {
+    const tbody = document.getElementById("leaderboard-tbody");
+    const pbEl = document.getElementById("modal-pb-score");
+    if (pbEl) pbEl.textContent = String(playerPersonalBest);
+
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="4" class="leaderboard-loading">Loading top scores...</td></tr>';
+    }
+
+    try {
+      const res = await fetch("/api/leaderboard");
+      if (!res.ok) throw new Error("Leaderboard fetch failed");
+      const data = await res.json();
+      if (!data.success || !Array.isArray(data.leaderboard)) {
+        throw new Error("Invalid leaderboard data");
+      }
+
+      if (!tbody) return;
+
+      if (data.leaderboard.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="leaderboard-empty">No feast records yet. Be the first!</td></tr>';
+        return;
+      }
+
+      let rowsHtml = "";
+      data.leaderboard.forEach((entry, idx) => {
+        const rank = idx + 1;
+        let rankDisplay = `#${rank}`;
+        if (rank === 1) rankDisplay = '<span class="rank-badge-top1">🥇 1</span>';
+        else if (rank === 2) rankDisplay = '<span class="rank-badge-top2">🥈 2</span>';
+        else if (rank === 3) rankDisplay = '<span class="rank-badge-top3">🥉 3</span>';
+
+        const isMe = entry.player_id === playerId;
+        const rowClass = isMe ? ' class="is-current-player"' : "";
+        const safeName = (entry.display_name || "Guest").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const timeAgo = formatTimeAgo(entry.submitted_at);
+
+        rowsHtml += `
+          <tr${rowClass}>
+            <td class="td-rank">${rankDisplay}</td>
+            <td class="td-player">${safeName}${isMe ? " (You)" : ""}</td>
+            <td class="td-score">${entry.score} pts</td>
+            <td class="td-date">${timeAgo}</td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = rowsHtml;
+    } catch (err) {
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="4" class="leaderboard-empty">Leaderboard unavailable offline.</td></tr>';
+      }
+    }
+  }
+
+  async function submitScore(numScore, numCaught, numMissed, numDuration) {
+    if (numScore > playerPersonalBest) {
+      playerPersonalBest = numScore;
+      try {
+        localStorage.setItem("soofi_mandi_pb", String(playerPersonalBest));
+      } catch (_) {}
+      const pbEl = document.getElementById("modal-pb-score");
+      if (pbEl) pbEl.textContent = String(playerPersonalBest);
+    }
+
+    try {
+      const res = await fetch("/api/leaderboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerId,
+          displayName: playerDisplayName,
+          score: numScore,
+          foodCaught: numCaught,
+          missedCount: numMissed,
+          durationSeconds: numDuration
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.rank) {
+          const rewardSummary = document.getElementById("reward-score-summary");
+          if (rewardSummary) {
+            rewardSummary.textContent = `You caught ${numScore} items! Ranked #${data.rank} on Leaderboard.`;
+          }
+        }
+      }
+    } catch (_) {
+      // Offline resilience
+    }
+  }
+
+  function updateDisplayNameUI(name) {
+    if (playerChipName) playerChipName.textContent = name;
+    if (playerNameInput) playerNameInput.value = name;
+  }
+
+  function openLeaderboard() {
+    if (!leaderboardModal) return;
+    leaderboardModal.classList.add("is-open");
+    leaderboardModal.setAttribute("aria-hidden", "false");
+    updateDisplayNameUI(playerDisplayName);
+    fetchLeaderboard();
+    trackEvent("leaderboard_view");
+  }
+
+  function closeLeaderboard() {
+    if (!leaderboardModal) return;
+    leaderboardModal.classList.remove("is-open");
+    leaderboardModal.setAttribute("aria-hidden", "true");
+  }
+
+  function savePlayerName() {
+    if (!playerNameInput) return;
+    const raw = playerNameInput.value.trim();
+    if (raw) {
+      const sanitized = raw.replace(/<[^>]*>?/gm, "").substring(0, 20);
+      playerDisplayName = sanitized;
+      try {
+        localStorage.setItem("soofi_mandi_display_name", sanitized);
+      } catch (_) {}
+      updateDisplayNameUI(sanitized);
+      fetchLeaderboard();
+    }
+  }
+
   // Demo Offers Configuration
   const demoOffers = window.SOOFI_MANDI_DEMO_OFFERS || window.SOOfiMandiOffers || [];
   let currentOffer = null;
 
   // =========================================================================
-  // GAME CONFIGURATION (Configurable parameters)
+  // GAME CONFIGURATION (Configurable parameters — 5-Miss Game Rule, NO Timer)
   // =========================================================================
   const GAME_CONFIG = {
-    duration: 12.0, // Exactly 12 seconds round
+    maxMisses: 5, // Exactly 5 misses ends game
     minSpawnInterval: 0.45, // Seconds between food spawns
     maxSpawnInterval: 0.70,
     minFallSpeedDesktop: 175, // Pixels per second on spacious desktop
@@ -83,8 +323,9 @@
   // Game Runtime State
   let gameState = "intro"; // "intro" | "playing" | "results" | "revealed"
   let roundStartTime = 0;
-  let timeLeft = GAME_CONFIG.duration;
+  const MAX_MISSES = 5;
   let score = 0;
+  let missedCount = 0;
   let gameAnimId = null;
   let lastFrameTime = 0;
   let spawnCooldown = 0;
@@ -325,7 +566,8 @@
       containerWidth: metrics.containerWidth,
       containerHeight: metrics.containerHeight,
       vy: speed,
-      caught: false
+      caught: false,
+      missed: false
     });
   }
 
@@ -349,6 +591,14 @@
     const currentTransform = `translate3d(${item.x}px, ${item.y}px, 0)`;
     item.el.style.setProperty("--current-transform", currentTransform);
     item.el.classList.add("is-caught");
+
+    // Gold ring pulse feedback on bucket
+    [bucketRear, bucketFront].forEach((b) => {
+      if (!b) return;
+      b.classList.remove("is-caught-pulse");
+      void b.offsetWidth;
+      b.classList.add("is-caught-pulse");
+    });
 
     // Spawn floating +1 popup above the bucket rim
     const popup = document.createElement("div");
@@ -380,25 +630,13 @@
     lastSpawnX = -999;
   }
 
-  // Main Game Loop (requestAnimationFrame)
+  // Main Game Loop (requestAnimationFrame) — Ends solely on 5 misses
   function gameLoop(now) {
     if (gameState !== "playing") return;
 
     if (!lastFrameTime) lastFrameTime = now;
     const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
     lastFrameTime = now;
-
-    // Accurate elapsed-time calculation immune to frame drops
-    const elapsed = (now - roundStartTime) / 1000;
-    timeLeft = Math.max(0, GAME_CONFIG.duration - elapsed);
-
-    if (timeLeft <= 0) {
-      timeLeft = 0;
-      updateTimerDisplay();
-      endGameRound();
-      return;
-    }
-    updateTimerDisplay();
 
     // Spawning cadence
     spawnCooldown -= dt;
@@ -436,11 +674,11 @@
       // Stable horizontal falling without label rotation
       item.el.style.transform = `translate3d(${item.x}px, ${item.y}px, 0)`;
 
-      // CRITICAL: Collision is calculated based strictly on the FOOD IMAGE reaching the bucket rim,
-      // NOT when the label enters the bucket!
+      // Collision calculated based strictly on food reaching the rim
       const foodImageBottom = item.y + item.imageHeight * 0.90;
       const foodCenter = item.x + item.containerWidth / 2;
 
+      // 1. Successful Catch Check
       if (
         foodImageBottom >= catchTop &&
         foodImageBottom <= catchBottom &&
@@ -451,8 +689,20 @@
         continue;
       }
 
-      // Remove items that leave the bottom of the playfield without scoring
+      // 2. 5-Miss Game Rule: Increment miss counter when food leaves bottom of playfield
       if (item.y > areaHeight + 25) {
+        if (!item.caught && !item.missed) {
+          item.missed = true;
+          missedCount++;
+          updateMissesDisplay();
+
+          if (missedCount >= MAX_MISSES) {
+            item.el.remove();
+            fallingItems.splice(i, 1);
+            endGameLoss();
+            return;
+          }
+        }
         item.el.remove();
         fallingItems.splice(i, 1);
       }
@@ -461,17 +711,24 @@
     gameAnimId = requestAnimationFrame(gameLoop);
   }
 
-  // Update Countdown Display (format: "12s", "09s", etc.)
-  function updateTimerDisplay() {
-    if (!gameTimerEl) return;
-    const seconds = Math.ceil(timeLeft);
-    const formatted = seconds < 10 ? `0${seconds}s` : `${seconds}s`;
-    gameTimerEl.textContent = formatted;
-
-    if (seconds <= 4 && seconds > 0) {
-      gameTimerEl.parentElement.classList.add("is-warning");
-    } else {
-      gameTimerEl.parentElement.classList.remove("is-warning");
+  // Update Misses HUD Display (e.g. "0/5", "4/5" with warning pulse, "5/5")
+  function updateMissesDisplay() {
+    if (gameMissesEl) {
+      gameMissesEl.textContent = `${missedCount}/${MAX_MISSES}`;
+    }
+    if (hudMissesEl) {
+      if (missedCount >= 4) {
+        hudMissesEl.classList.add("is-warning");
+      } else {
+        hudMissesEl.classList.remove("is-warning");
+      }
+    }
+    if (hudMissWarningEl) {
+      if (missedCount === 4) {
+        hudMissWarningEl.classList.add("is-visible");
+      } else {
+        hudMissWarningEl.classList.remove("is-visible");
+      }
     }
   }
 
@@ -489,22 +746,34 @@
     clearFallingItems();
     stopConfetti();
 
+    const isReplay = (gameState === "revealed");
+    trackEvent("game_start", { isReplay });
+
     // Reset game round state
     gameState = "playing";
-    timeLeft = GAME_CONFIG.duration;
     score = 0;
+    missedCount = 0;
     spawnCooldown = 0.22; // First food item spawns promptly
     lastFrameTime = 0;
     hasMovedBucket = false;
     roundStartTime = performance.now();
 
     // Reset Container & Reward Card State
-    rewardCard.setAttribute("aria-hidden", "true");
+    if (rewardCard) {
+      rewardCard.classList.remove("is-loss");
+      rewardCard.setAttribute("aria-hidden", "true");
+    }
+    if (rewardOfferCard) {
+      rewardOfferCard.style.display = "none";
+    }
+    if (rewardLossHeadline) {
+      rewardLossHeadline.style.display = "none";
+    }
 
     // Reset HUD
     if (gameScoreEl) gameScoreEl.textContent = "0";
     if (bucketDragIndicator) bucketDragIndicator.classList.remove("is-hidden");
-    updateTimerDisplay();
+    updateMissesDisplay();
 
     // Show Playing View with enlarged playfield & center bucket
     switchView(viewPlaying, "playing");
@@ -514,8 +783,8 @@
     gameAnimId = requestAnimationFrame(gameLoop);
   }
 
-  // End of Round: Triggered strictly when 12-second countdown expires
-  function endGameRound() {
+  // End of Round: Triggered immediately when player reaches 5 missed food items
+  function endGameLoss() {
     if (gameState !== "playing") return;
     gameState = "revealed";
 
@@ -530,6 +799,7 @@
     }
 
     clearFallingItems();
+    stopConfetti();
 
     // Preserve the actual final score (including 0)
     const finalScore = score;
@@ -543,13 +813,42 @@
     if (rewardScoreNumber) rewardScoreNumber.textContent = String(finalScore);
     if (rewardScoreSummary) rewardScoreSummary.textContent = scoreSummaryText;
 
-    // 3. Immediately reveal the Offer Screen with result-bg.png & light card
-    switchView(null, "revealed");
-    rewardCard.setAttribute("aria-hidden", "false");
+    // 3. Configure Card: Prominent YOU LOST! and NEVER display offer card or coupon
+    if (rewardCard) {
+      rewardCard.classList.add("is-loss");
+      rewardCard.setAttribute("aria-hidden", "false");
+    }
+    if (rewardLossHeadline) {
+      rewardLossHeadline.style.display = "block";
+    }
+    if (rewardKicker) {
+      rewardKicker.textContent = "GAME OVER";
+    }
+    if (rewardOfferCard) {
+      rewardOfferCard.style.display = "none";
+    }
 
-    // 4. Trigger Full-Screen Confetti Celebration (Once per completed round)
-    triggerFullScreenConfetti();
+    // 4. Reveal the Loss / Result Screen
+    switchView(null, "revealed");
+
+    // 5. Track event and submit score to global leaderboard
+    const elapsedSeconds = Math.max(1, Math.round((performance.now() - roundStartTime) / 1000));
+    trackEvent("game_loss", {
+      score: finalScore,
+      foodCaught: finalScore,
+      missedCount: MAX_MISSES,
+      durationSeconds: elapsedSeconds
+    });
+    trackEvent("game_complete", {
+      score: finalScore,
+      foodCaught: finalScore,
+      missedCount: MAX_MISSES,
+      durationSeconds: elapsedSeconds
+    });
+    submitScore(finalScore, finalScore, MAX_MISSES, elapsedSeconds);
   }
+
+  const endGameRound = endGameLoss;
 
   /**
    * =========================================================================
@@ -567,16 +866,15 @@
 
     stopConfetti();
 
-    // Palette with vibrant gold, cream, white, and darker gold/bronze for visibility
+    // Palette with vibrant gold, cream, forest green, and sand for celebratory theme
     const confettiPalette = [
-      "#FFB900",
-      "#FFC83B",
-      "#FFE58F",
-      "#FFFFFF",
+      "#F5B800",
+      "#FFD24D",
+      "#D99E00",
       "#FFF8E7",
-      "#E5A700",
-      "#B87800",
-      "#8F5600"
+      "#F0E3C4",
+      "#7BD88F",
+      "#1B5E45"
     ];
 
     const isMobile = window.innerWidth < 600;
@@ -750,16 +1048,22 @@
     stopConfetti();
 
     gameState = "intro";
-    rewardCard.setAttribute("aria-hidden", "true");
-
     score = 0;
-    timeLeft = GAME_CONFIG.duration;
+    missedCount = 0;
+
+    if (rewardCard) {
+      rewardCard.classList.remove("is-loss");
+      rewardCard.setAttribute("aria-hidden", "true");
+    }
+    if (rewardOfferCard) {
+      rewardOfferCard.style.display = "none";
+    }
+    if (rewardLossHeadline) {
+      rewardLossHeadline.style.display = "none";
+    }
 
     if (gameScoreEl) gameScoreEl.textContent = "0";
-    if (gameTimerEl) {
-      gameTimerEl.textContent = "12s";
-      gameTimerEl.parentElement.classList.remove("is-warning");
-    }
+    updateMissesDisplay();
 
     switchView(viewIntro, "intro");
   }
@@ -866,14 +1170,94 @@
     }
   });
 
-  // Button Listeners
+  // Action Button Listeners
   if (startGameBtn) {
-    startGameBtn.addEventListener("click", startGame);
+    startGameBtn.addEventListener("click", () => {
+      trackEvent("cta_click", { target: "start_game" });
+      startGame();
+    });
   }
 
   if (playAgainBtn) {
-    playAgainBtn.addEventListener("click", startGame);
+    playAgainBtn.addEventListener("click", () => {
+      trackEvent("game_replay");
+      trackEvent("cta_click", { target: "play_again" });
+      startGame();
+    });
   }
+
+  if (openLeaderboardBtn) {
+    openLeaderboardBtn.addEventListener("click", () => {
+      trackEvent("cta_click", { target: "open_leaderboard_intro" });
+      openLeaderboard();
+    });
+  }
+
+  if (resultLeaderboardBtn) {
+    resultLeaderboardBtn.addEventListener("click", () => {
+      trackEvent("cta_click", { target: "open_leaderboard_result" });
+      openLeaderboard();
+    });
+  }
+
+  if (closeLeaderboardBtn) {
+    closeLeaderboardBtn.addEventListener("click", closeLeaderboard);
+  }
+
+  if (doneLeaderboardBtn) {
+    doneLeaderboardBtn.addEventListener("click", closeLeaderboard);
+  }
+
+  if (leaderboardModal) {
+    leaderboardModal.addEventListener("click", (event) => {
+      if (event.target === leaderboardModal) {
+        closeLeaderboard();
+      }
+    });
+  }
+
+  if (playerChipEditBtn) {
+    playerChipEditBtn.addEventListener("click", () => {
+      openLeaderboard();
+      if (playerNameInput) {
+        playerNameInput.focus();
+        playerNameInput.select();
+      }
+    });
+  }
+
+  if (saveNameBtn) {
+    saveNameBtn.addEventListener("click", savePlayerName);
+  }
+
+  if (playerNameInput) {
+    playerNameInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        savePlayerName();
+      }
+    });
+  }
+
+  // Keyboard navigation for modal (ESC key to dismiss)
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && leaderboardModal && leaderboardModal.classList.contains("is-open")) {
+      closeLeaderboard();
+    }
+  });
+
+  // Window lifecycle tracking (game abandon & session)
+  window.addEventListener("beforeunload", () => {
+    if (gameState === "playing") {
+      trackEvent("game_abandon", { score, missedCount });
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && gameState === "playing") {
+      trackEvent("game_abandon", { score, missedCount });
+    }
+  });
 
   if (resetBtn) {
     resetBtn.addEventListener("click", resetDemo);
@@ -885,6 +1269,13 @@
 
   if (rewardResetBtn) {
     rewardResetBtn.addEventListener("click", resetDemo);
+  }
+
+  // Initial Anonymous Identity & Session Tracking
+  updateDisplayNameUI(playerDisplayName);
+  trackEvent("page_visit", { path: window.location.pathname });
+  if (isNewSession) {
+    trackEvent("session_start");
   }
 
   // Initialize strictly on the Intro Screen

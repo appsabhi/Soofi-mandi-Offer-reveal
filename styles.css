@@ -1,121 +1,154 @@
 :root {
-  color-scheme: light;
-  --bg-page: #FFFFFF;
-  --bg-card: #FFFFFF;
-  --bg-playfield: #FFFFFF;
-  --gold: #FFB900;
-  --gold-hover: #EAA800;
-  --gold-deep: #C78600;
-  --gold-dark: #8F5600;
-  --gold-light: #FFF6D6;
-  --gold-sheen: #FFFDF5;
-  --text-dark: #2A1706;
-  --text-body: #544436;
-  --text-muted: #847565;
-  --border-card: #EDE5D8;
-  --border-gold: rgba(255, 185, 0, 0.45);
-  --shadow-card: 0 18px 45px rgba(68, 44, 18, 0.08), 0 2px 12px rgba(255, 185, 0, 0.07);
+  --stage-center: #1B5E45;
+  --stage-edge: #0A2A20;
+  --stage-floor: #123F30;
+
+  --gold-500: #F5B800;
+  --gold-300: #FFD24D;
+  --gold-600: #D99E00;
+
+  --cream-50: #FFF8E7;
+  --sand-200: #F0E3C4;
+  --brown-900: #2A1408;
+  --spice-600: #B5532F;
+  --text-muted: #CFE3D8;
+
+  --chip-bg: rgba(255, 248, 231, 0.10);
+  --chip-line: rgba(245, 184, 0, 0.45);
+
+  --success: #7BD88F;
+  --danger: #FF6B4A;
+
   --sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family: var(--sans);
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-body {
-  min-width: 320px;
-  min-height: 100vh;
+html, body {
   margin: 0;
-  color: var(--text-body);
-  background-color: #FFFFFF;
-  background-image: none;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--stage-edge);
+  background-image: radial-gradient(circle at 50% 35%, var(--stage-center), var(--stage-edge) 75%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: var(--cream-50);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* Screen Backgrounds */
 body.state-intro,
-body.state-playing {
-  background-color: #FFFFFF;
-  background-image: none;
+body.state-playing,
+body.state-results,
+body.state-revealed {
+  background-color: var(--stage-edge);
+  background-image: radial-gradient(circle at 50% 35%, var(--stage-center), var(--stage-edge) 75%);
 }
 
-/* Final Result & Offer Reveal: Subtle, warm ivory background with soft golden lighting */
-body.state-revealed,
-body.state-results {
-  background-color: #FAF6EF;
-  background-image:
-    radial-gradient(circle at 50% 12%, rgba(255, 201, 51, 0.22) 0%, rgba(255, 185, 0, 0.08) 38%, transparent 68%),
-    radial-gradient(circle at 10% 85%, rgba(255, 185, 0, 0.09) 0%, transparent 45%),
-    radial-gradient(circle at 90% 85%, rgba(255, 185, 0, 0.09) 0%, transparent 45%),
-    linear-gradient(180deg, #FDFBF8 0%, #FAF6EF 50%, #F5EFE2 100%);
-  background-attachment: fixed;
-}
-
-/* Page Wrapper — Uses full available viewport */
+/* =========================================================================
+   PAGE WRAPPER — Mobile-first clean layout with Safe-Area insets
+   ========================================================================= */
 .page-wrap {
   position: relative;
   z-index: 2;
   display: flex;
   width: 100%;
-  max-width: 1600px;
-  min-height: 100svh;
+  max-width: 1200px;
+  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: 16px 16px 20px;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   box-sizing: border-box;
 }
 
-body.state-intro .page-wrap,
-body.state-revealed .page-wrap {
+/* Center start screen vertically & horizontally without clipping top coordinates */
+body.state-intro .page-wrap {
   justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* Brand Header — Rendered cleanly above wide containers; hidden on intro screen since intro card has its own integrated logo */
+body.state-revealed .page-wrap,
+body.state-results .page-wrap {
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+body.state-playing .page-wrap {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+}
+
+/* =========================================================================
+   BRAND HEADER (During Gameplay)
+   ========================================================================= */
 .brand-header {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
+  flex-shrink: 0;
 }
 
-.page-wrap:has(.white-container.is-intro) .brand-header,
-.white-container.is-intro ~ .brand-header {
-  display: none;
+body.state-intro .brand-header,
+body.state-revealed .brand-header {
+  display: none !important;
 }
 
 .brand-logo {
   display: block;
   width: auto;
-  height: clamp(58px, 7.5vh, 76px);
-  max-width: 180px;
+  height: clamp(54px, 7.5vh, 72px);
+  max-width: 190px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 14px rgba(184, 115, 0, 0.28));
+  filter: drop-shadow(0 4px 14px rgba(245, 184, 0, 0.3));
   user-select: none;
   -webkit-user-select: none;
   transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.25, 1);
 }
 
 .brand-logo:hover {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
-/* Container Wrapper — Full screen width, no restrictive clipping */
+/* =========================================================================
+   CONTAINERS
+   ========================================================================= */
 .white-container-wrap {
   position: relative;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+}
+
+body.state-playing .white-container-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
   justify-content: flex-start;
 }
 
-/* The Main Container — Unboxed, sits directly over full-screen background */
 .white-container {
   position: relative;
   width: 100%;
@@ -123,50 +156,44 @@ body.state-revealed .page-wrap {
   border: none;
   box-shadow: none;
   overflow: visible;
-  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* State 1: Intro Screen — Unboxed, content directly positioned over full-screen scene */
 .white-container.is-intro {
-  max-width: 720px;
+  max-width: 500px;
   margin: 0 auto;
-  padding: 8px 16px 18px;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
-/* State 2: Gameplay Container — Expands to fill spacious wide play area */
-.white-container.is-playing {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 16px;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
-/* State 3: Offer Reveal Container — Full-screen palace background */
-.white-container.is-results,
-.white-container.is-revealed {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 20px 16px;
-  background: transparent;
-  border: none;
-  box-shadow: none;
+  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.white-container h1,
-.white-container h2 {
-  font-family: var(--sans);
+.white-container.is-playing {
+  max-width: 1100px;
+  width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Game Views Inside White Container */
+.white-container.is-results,
+.white-container.is-revealed {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================================================================
+   VIEWS SWITCHING
+   ========================================================================= */
 .game-view {
   display: none !important;
   width: 100%;
@@ -184,7 +211,7 @@ body.state-revealed .page-wrap {
 @keyframes view-fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
+    transform: translateY(6px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -193,140 +220,218 @@ body.state-revealed .page-wrap {
 }
 
 /* =========================================================================
-   VIEW 1: INTRODUCTION SCREEN (Clean Minimalist White Background)
+   STEP 3: START SCREEN (Green & Gold Mobile-First Layout)
    ========================================================================= */
 .game-view-intro {
   width: 100%;
-  max-width: 580px;
+  max-width: 480px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
-/* 1. Soofi Mandi Logo */
+/* 1. Soofi Mandi Logo (Noticeably larger on mobile, preserved aspect ratio) */
 .intro-logo-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 0 0 14px;
+  margin: 0 0 10px;
 }
 
 .intro-logo {
   display: block;
   width: auto;
-  height: clamp(58px, 7.5vh, 74px);
-  max-width: 170px;
+  height: clamp(76px, 11vh, 100px);
+  max-width: 220px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(184, 115, 0, 0.22));
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.45));
   user-select: none;
   -webkit-user-select: none;
   transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.25, 1);
 }
 
 .intro-logo:hover {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
-/* 2. Small uppercase gold eyebrow */
+/* 2. Eyebrow in gold */
 .intro-eyebrow {
-  margin: 0 0 6px;
-  color: #C78600;
+  margin: 0 0 4px;
+  color: var(--gold-500);
   font-family: var(--sans);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
-/* 3. Large bold dark-brown heading */
+/* 3. Primary Heading in cream */
 .intro-heading {
   margin: 0 0 4px;
-  color: #2A1706;
+  color: var(--cream-50);
   font-family: var(--sans);
-  font-size: clamp(28px, 5vw, 36px);
+  font-size: clamp(26px, 5.5vw, 36px);
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.02em;
 }
 
-/* 4. Gold heading */
+/* 4. Game Title in gold */
 .game-title {
-  margin: 0 0 8px;
-  color: #C78600;
+  margin: 0 0 6px;
+  color: var(--gold-500);
   font-family: var(--sans);
-  font-size: clamp(20px, 4vw, 26px);
+  font-size: clamp(20px, 4vw, 28px);
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: 0.04em;
 }
 
-/* 5. Short description */
+/* 5. Short Description in muted mint */
 .game-subtitle {
-  max-width: 440px;
-  margin: 0 auto 16px;
-  color: #544436;
+  max-width: 380px;
+  margin: 0 auto 12px;
+  color: var(--text-muted);
   font-family: var(--sans);
   font-size: 13.5px;
   font-weight: 500;
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
-/* 6. Centered Mandi Bucket (larger & prominent) */
+/* 6. Centered Mandi Bucket with Falling Food Animation & Motion Lines */
 .intro-bucket-wrap {
-  width: 170px;
-  height: 148px;
+  position: relative;
+  width: clamp(140px, 18vh, 175px);
+  height: clamp(120px, 16vh, 150px);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 8px auto 16px;
-  filter: drop-shadow(0 10px 22px rgba(45, 27, 0, 0.16));
+  margin: 6px auto 14px;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.intro-bucket-img {
+/* Subtle gold radial glow behind bucket */
+.intro-bucket-glow {
+  position: absolute;
+  width: 140%;
+  height: 140%;
+  top: -20%;
+  left: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 184, 0, 0.25) 0%, rgba(245, 184, 0, 0.08) 50%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Introductory decorative falling plate */
+.intro-falling-food-wrap {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  z-index: 2;
+  pointer-events: none;
+  animation: intro-mandi-fall 2.2s cubic-bezier(0.3, 0, 0.7, 1) infinite;
+}
+
+.intro-motion-lines {
+  width: 32px;
+  height: 24px;
+  margin-bottom: -6px;
+  opacity: 0.85;
+}
+
+.intro-falling-plate {
+  width: 64px;
+  height: 50px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes intro-mandi-fall {
+  0% {
+    transform: translate3d(-50%, -28px, 0) scale(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  60% {
+    transform: translate3d(-50%, 42px, 0) scale(0.92);
+    opacity: 1;
+  }
+  85% {
+    transform: translate3d(-50%, 65px, 0) scale(0.75);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(-50%, 75px, 0) scale(0.65);
+    opacity: 0;
+  }
+}
+
+/* Stop decorative animation when game starts */
+body:not(.state-intro) .intro-falling-food-wrap {
+  animation-play-state: paused;
+  display: none;
+}
+
+/* Stationary Bucket Layers (3D Rim Layering: rear behind plate, front in front of plate) */
+.intro-bucket-rear,
+.intro-bucket-front {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.intro-bucket-rear {
+  z-index: 1;
+}
+
+.intro-bucket-rear .intro-bucket-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.5));
+}
+
+.intro-bucket-front {
+  z-index: 3;
+  clip-path: polygon(
+    0% 25.5%, 5% 25.8%, 10% 27.2%, 15% 29.2%, 20% 31.8%, 25% 34.5%,
+    30% 36.5%, 35% 37.8%, 40% 38.6%, 45% 38.9%, 50% 39.0%, 55% 38.9%,
+    60% 38.6%, 65% 37.8%, 70% 36.5%, 75% 34.5%, 80% 31.8%, 85% 29.2%,
+    90% 27.2%, 95% 25.8%, 100% 25.5%, 100% 100%, 0% 100%
+  );
+}
+
+.intro-bucket-front .intro-bucket-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
 }
 
-/* 7. Mouse/drag instruction with icon beside text */
-.intro-instruction-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 0 auto 20px;
-  max-width: 440px;
-}
-
-.intro-instruction-icon {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  color: #8F5600;
-}
-
-.game-instruction {
-  margin: 0;
-  color: #544436;
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-}
-
-/* 8 & 9. Action buttons container (START GAME & Reset Demo) */
+/* 7. Action Buttons (START GAME, Leaderboard) */
 .intro-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
 }
 
@@ -334,34 +439,37 @@ body.state-revealed .page-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: 8px;
   font-family: var(--sans);
   cursor: pointer;
   transition: all 0.22s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
-.btn-gold {
-  background: linear-gradient(135deg, #FFC933 0%, #FFB900 48%, #E5A300 100%);
-  color: #2D1B00;
-}
-
-/* 8. Prominent gold gradient pill-shaped START GAME button with play icon */
 .start-game-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 13px 44px;
+  min-height: 48px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #FFC933 0%, #FFB900 50%, #E5A300 100%);
-  color: #2D1B00;
-  box-shadow: 0 6px 20px rgba(255, 185, 0, 0.38), 0 2px 6px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, var(--gold-300) 0%, var(--gold-500) 50%, var(--gold-600) 100%);
+  color: var(--brown-900);
+  box-shadow: 0 4px 18px rgba(245, 184, 0, 0.45), 0 0 12px rgba(245, 184, 0, 0.25);
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
 .start-game-btn:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 26px rgba(255, 185, 0, 0.48);
+  box-shadow: 0 6px 24px rgba(245, 184, 0, 0.6), 0 0 18px rgba(245, 184, 0, 0.35);
 }
 
 .start-game-btn:active {
@@ -369,52 +477,135 @@ body.state-revealed .page-wrap {
 }
 
 .start-game-btn:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--gold-500);
   outline-offset: 3px;
 }
 
-/* 9. Smaller white Reset Demo button with a thin gold border */
-.btn-intro-reset {
+/* Secondary button pill (e.g. Leaderboard button) */
+.btn-secondary-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 8px 24px;
-  background: #FFFFFF;
-  border: 1.5px solid rgba(199, 134, 0, 0.45);
+  gap: 6px;
+  padding: 8px 20px;
+  min-height: 38px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   border-radius: 999px;
-  color: var(--text-body);
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-line);
+  color: var(--gold-300);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  position: relative;
+  z-index: 10;
+  transition: all 0.2s ease;
 }
 
-.btn-intro-reset:hover {
-  background: #FFFDF8;
-  border-color: var(--gold-dark);
-  color: var(--gold-dark);
+.btn-secondary-pill:hover {
+  background: rgba(255, 248, 231, 0.18);
+  border-color: var(--gold-500);
+  color: var(--gold-500);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 185, 0, 0.2);
 }
 
-.btn-intro-reset:active {
-  transform: translateY(1px);
+.btn-secondary-pill .btn-icon {
+  font-size: 13px;
+  line-height: 1;
 }
 
-.btn-intro-reset:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 3px;
+/* Anonymous Player Identity Chip */
+.intro-player-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--chip-line);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.player-chip-label {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.player-chip-name {
+  color: var(--gold-300);
+  font-weight: 700;
+}
+
+.player-chip-edit-btn {
+  background: transparent;
+  border: none;
+  color: var(--gold-500);
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 12px;
+  line-height: 1;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.player-chip-edit-btn:hover {
+  color: var(--gold-300);
+  transform: scale(1.15);
+}
+
+/* Result Screen Leaderboard Button */
+.result-leaderboard-btn {
+  margin-top: 4px;
+}
+
+/* Hide customer-facing reset demo elements and unused guides */
+.btn-intro-reset,
+.reward-reset-btn,
+.reset-demo-btn,
+.reset-wrap,
+.intro-instruction-wrap,
+.bucket-drag-indicator {
+  display: none !important;
+}
+
+/* 8. Small Footer note */
+.footer-note {
+  display: flex;
+  margin-top: 16px;
+  padding: 4px 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-align: center;
+  user-select: none;
+}
+
+body.state-playing .footer-note,
+body.state-revealed .footer-note {
+  display: none;
+}
+
+.footer-note span {
+  color: var(--gold-500);
 }
 
 /* =========================================================================
-   VIEW 2: ACTIVE GAMEPLAY SCREEN (Spacious Playfield & Compact HUD)
+   STEP 4: ACTIVE GAMEPLAY SCREEN (Clean White Layout & Compact HUD)
    ========================================================================= */
 .game-view-playing {
   width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Compact status bar directly above the playfield */
@@ -423,9 +614,10 @@ body.state-revealed .page-wrap {
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--chip-line);
+  flex-shrink: 0;
 }
 
 .hud-center-title {
@@ -436,60 +628,57 @@ body.state-revealed .page-wrap {
 }
 
 .hud-title-eyebrow {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.22em;
-  color: #B87800;
+  color: var(--gold-500);
   text-transform: uppercase;
   margin-bottom: 1px;
 }
 
 .hud-title-main {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.05em;
-  color: #2A1706;
+  color: var(--cream-50);
   text-transform: uppercase;
 }
 
+/* Score and Misses indicator chips */
 .hud-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-width: 124px;
-  height: 40px;
-  padding: 6px 18px;
-  background: #FAF7F0;
-  border: 1.5px solid rgba(255, 185, 0, 0.45);
+  gap: 6px;
+  min-width: 95px;
+  height: 36px;
+  padding: 4px 14px;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-line);
   border-radius: 999px;
   font-family: var(--sans);
   user-select: none;
-  box-shadow: 0 2px 8px rgba(68, 44, 18, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   box-sizing: border-box;
 }
 
 .hud-label {
-  color: #8C7862;
-  font-size: 11px;
+  color: var(--gold-500);
+  font-size: 10.5px;
   letter-spacing: 0.14em;
   font-weight: 700;
 }
 
 .hud-value {
   font-family: var(--sans);
-  font-size: 15.5px;
+  font-size: 14.5px;
   font-weight: 800;
   letter-spacing: 0.02em;
-  color: var(--text-dark);
-}
-
-.hud-score {
-  color: #2D2310;
+  color: var(--cream-50);
 }
 
 .hud-score .hud-value {
-  color: var(--gold-dark);
+  color: var(--cream-50);
   display: inline-block;
   transition: transform 0.15s cubic-bezier(0.18, 0.85, 0.3, 1);
 }
@@ -500,41 +689,71 @@ body.state-revealed .page-wrap {
 
 @keyframes score-num-pop {
   0% { transform: scale(1); }
-  50% { transform: scale(1.35); color: #E59800; }
+  50% { transform: scale(1.35); color: var(--gold-500); }
   100% { transform: scale(1); }
 }
 
-.hud-timer {
-  color: #8C5900;
+.hud-misses .hud-value {
+  color: var(--cream-50);
+  display: inline-block;
 }
 
-.hud-timer.is-warning {
-  background: #FFF1F0;
-  border-color: #FFA39E;
-  color: #CF1322;
-  animation: timer-pulse 0.6s infinite alternate;
+.hud-misses.is-warning {
+  border-color: var(--danger);
+  background: rgba(255, 107, 74, 0.22);
+  animation: miss-warning-pulse 0.7s ease-in-out infinite alternate;
 }
 
-.hud-timer.is-warning .hud-value {
-  color: #CF1322;
+.hud-misses.is-warning .hud-value {
+  color: var(--danger);
 }
 
-@keyframes timer-pulse {
-  from { transform: scale(1); }
-  to { transform: scale(1.06); }
+@keyframes miss-warning-pulse {
+  from {
+    box-shadow: 0 0 2px rgba(255, 107, 74, 0.3);
+  }
+  to {
+    box-shadow: 0 0 12px rgba(255, 107, 74, 0.7);
+  }
 }
 
-/* Playfield — Clean solid white background with subtle neutral border */
+/* Optional 4-miss warning banner */
+.hud-miss-warning {
+  display: none;
+  align-self: center;
+  padding: 3px 14px;
+  margin-top: 4px;
+  background: rgba(255, 107, 74, 0.2);
+  border: 1px solid var(--danger);
+  border-radius: 999px;
+  color: var(--cream-50);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  animation: banner-pop 0.3s ease-out forwards;
+}
+
+.hud-miss-warning.is-visible {
+  display: block;
+}
+
+@keyframes banner-pop {
+  from { opacity: 0; transform: translateY(-4px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Playfield — Stage center to edge gradient with stage floor band */
 .game-play-area {
   position: relative;
   width: 100%;
-  height: clamp(480px, 68vh, 720px);
-  margin-top: 10px;
-  background-color: #FFFFFF;
-  background-image: none;
+  flex: 1 1 auto;
+  min-height: 280px;
+  height: 100%;
+  margin-top: 6px;
+  background: linear-gradient(180deg, rgba(27, 94, 69, 0.15) 0%, rgba(10, 42, 32, 0.45) 80%, var(--stage-floor) 100%);
+  border: 1px solid var(--chip-line);
   border-radius: 20px;
-  border: 1.5px solid #EDE5D8;
-  box-shadow: 0 8px 30px rgba(68, 44, 18, 0.05);
+  box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   touch-action: none;
   user-select: none;
@@ -547,10 +766,7 @@ body.state-revealed .page-wrap {
 }
 
 /* =========================================================================
-   3D LAYERED BUCKET & FALLING FOOD ENTRY SYSTEM
-   1. Rear bucket layer (z-index: 2, back rim & cavity interior)
-   2. Falling food items layer (z-index: 4, drops into open interior)
-   3. Front bucket layer (z-index: 6, front rim & front body, clips over food)
+   3D LAYERED BUCKET & FALLING DELICACIES
    ========================================================================= */
 .bucket-layer {
   position: absolute;
@@ -572,10 +788,9 @@ body.state-revealed .page-wrap {
   transform: translateX(-50%) rotate(4deg);
 }
 
-/* 1. Rear bucket layer: Renders behind falling food */
 .bucket-rear-layer {
   z-index: 2;
-  filter: drop-shadow(0 6px 16px rgba(45, 27, 0, 0.32));
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45));
 }
 
 .bucket-rear-layer .bucket-img {
@@ -585,7 +800,6 @@ body.state-revealed .page-wrap {
   display: block;
 }
 
-/* 2. Falling food layer: Drops into the bucket opening */
 .falling-items-layer {
   position: absolute;
   inset: 0;
@@ -594,7 +808,6 @@ body.state-revealed .page-wrap {
   overflow: hidden;
 }
 
-/* 3. Front bucket layer: Renders IN FRONT OF food, clipped to front rim and body */
 .bucket-front-layer {
   z-index: 6;
   clip-path: polygon(
@@ -656,6 +869,18 @@ body.state-revealed .page-wrap {
   display: block;
 }
 
+/* Brief gold ring pulse on bucket on successful catch */
+.bucket-layer.is-caught-pulse,
+.bucket-front-layer.is-caught-pulse {
+  animation: bucket-catch-pulse 0.35s ease-out;
+}
+
+@keyframes bucket-catch-pulse {
+  0% { filter: drop-shadow(0 0 0 rgba(245, 184, 0, 0)); }
+  50% { filter: drop-shadow(0 0 16px var(--gold-500)); }
+  100% { filter: drop-shadow(0 0 0 rgba(245, 184, 0, 0)); }
+}
+
 /* Falling food items with attached horizontal name tag */
 .falling-food-item {
   position: absolute;
@@ -673,31 +898,37 @@ body.state-revealed .page-wrap {
   width: 82px;
   height: 64px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 8px rgba(45, 27, 0, 0.22));
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
   display: block;
   pointer-events: none;
 }
 
-/* Food name tag: Horizontal, aligned, crisp, no unwanted rotations */
+/* Food name pills: cream-colored with var(--brown-900) text */
 .falling-food-item .food-name-tag {
   display: inline-block;
-  margin-top: 4px;
-  padding: 2.5px 10px;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(184, 115, 0, 0.38);
+  margin-top: 3px;
+  padding: 2.5px 9px;
+  background: var(--cream-50);
+  border: 1px solid var(--chip-line);
   border-radius: 12px;
-  color: var(--text-dark);
+  color: var(--brown-900);
   font-family: var(--sans);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(42, 23, 6, 0.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   line-height: 1.25;
   pointer-events: none;
 }
 
-/* Food entering bucket animation — Food drops deep into the bucket opening behind front wall */
+.falling-food-item.is-missed {
+  opacity: 0.35;
+  filter: grayscale(0.6);
+  transition: opacity 0.2s ease;
+}
+
+/* Food entering bucket animation */
 .falling-food-item.is-caught {
   animation: food-caught-pop 0.34s cubic-bezier(0.18, 0.85, 0.3, 1) forwards !important;
 }
@@ -721,14 +952,16 @@ body.state-revealed .page-wrap {
   }
 }
 
+/* Score popup using var(--success) */
 .catch-popup {
   position: absolute;
-  color: var(--gold-dark);
+  color: var(--success);
   font-family: var(--sans);
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 800;
   pointer-events: none;
   z-index: 10;
+  text-shadow: 0 0 10px rgba(123, 216, 143, 0.65);
   animation: catch-float-up 0.55s cubic-bezier(0.15, 0.85, 0.25, 1) forwards;
 }
 
@@ -741,72 +974,28 @@ body.state-revealed .page-wrap {
     opacity: 1;
   }
   100% {
-    transform: translate(-50%, -32px) scale(1.1);
+    transform: translate(-50%, -30px) scale(1.1);
     opacity: 0;
   }
-}
-
-.bucket-drag-indicator {
-  position: absolute;
-  bottom: 84px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #9C8C78;
-  font-family: var(--sans);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  opacity: 0.85;
-  pointer-events: none;
-  user-select: none;
-  transition: opacity 0.3s ease;
-  animation: indicator-pulse 2s ease-in-out infinite alternate;
-}
-
-@keyframes indicator-pulse {
-  from { opacity: 0.45; transform: translateX(-50%) scale(0.96); }
-  to { opacity: 0.95; transform: translateX(-50%) scale(1.02); }
-}
-
-.bucket-drag-indicator.is-hidden {
-  opacity: 0;
 }
 
 /* VIEW 3: Results Interstitial Screen */
 .game-view-results {
-  max-width: 600px;
+  max-width: 500px;
   width: 100%;
   margin: 0 auto;
-  padding: 30px 16px 24px;
-  animation: results-zoom-in 0.4s cubic-bezier(0.18, 0.85, 0.32, 1) forwards;
+  padding: 24px 16px;
   position: relative;
 }
 
-@keyframes results-zoom-in {
-  from {
-    opacity: 0;
-    transform: scale(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 .results-badge {
-  font-size: 42px;
-  margin-bottom: 8px;
-  filter: drop-shadow(0 4px 12px rgba(255, 185, 0, 0.45));
-  animation: badge-bounce 1s cubic-bezier(0.18, 0.85, 0.3, 1) infinite alternate;
-}
-
-@keyframes badge-bounce {
-  from { transform: translateY(0) scale(1); }
-  to { transform: translateY(-5px) scale(1.06); }
+  font-size: 36px;
+  margin-bottom: 6px;
+  color: var(--gold-500);
 }
 
 .results-kicker {
-  color: #B45309;
+  color: var(--spice-600);
   font-family: var(--sans);
   font-size: 12px;
   font-weight: 800;
@@ -819,102 +1008,50 @@ body.state-revealed .page-wrap {
   color: var(--text-dark);
   font-family: var(--sans);
   font-weight: 800;
-  font-size: clamp(24px, 5.2vw, 32px);
+  font-size: clamp(22px, 5vw, 30px);
   margin-bottom: 6px;
-  background: linear-gradient(135deg, #FFB900 0%, #D48E00 50%, #8A5700 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .results-subtitle {
-  max-width: 380px;
-  color: var(--text-body);
+  color: var(--text-muted);
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
   margin: 0;
 }
 
-/* Hide game views when reward offer is revealed */
+/* =========================================================================
+   STEP 5 & 6: RESULT / "YOU LOST!" & REWARD SCREEN
+   ========================================================================= */
 .white-container.is-revealed .game-view {
   display: none !important;
 }
 
-/* =========================================================================
-   VIEW 4: PREMIER RESTAURANT OFFER REVEAL SCREEN
-   - Warm ivory, rich dark brown, and elegant golden accents
-   - Prominent Soofi Mandi logo branding
-   - Refined celebratory feast score section
-   - High-contrast, golden illuminated special offer card (Main Attraction)
-   - Primary Play Again & secondary Reset Demo buttons
-   ========================================================================= */
-
-.white-container.is-results,
-.white-container.is-revealed {
-  max-width: 580px;
-  margin: 0 auto;
-  padding: 12px 16px 24px;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+body:not(.state-revealed):not(.state-results) .reward-card {
+  display: none !important;
 }
 
 .reward-card {
   position: relative;
   display: flex;
   width: 100%;
-  max-width: 500px;
+  max-width: 440px;
   margin: 0 auto;
-  padding: 28px 26px 24px;
+  padding: 24px 20px 20px;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: linear-gradient(180deg, #FFFFFF 0%, #FFFEFC 60%, #FFFDF7 100%);
-  border: 1.5px solid rgba(255, 185, 0, 0.58);
-  border-radius: 24px;
-  box-shadow:
-    0 22px 55px rgba(68, 44, 18, 0.12),
-    0 4px 18px rgba(255, 185, 0, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 0 0 1px rgba(255, 240, 190, 0.4);
+  background: var(--cream-50);
+  border: 1.5px solid var(--chip-line);
+  border-radius: 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 24px rgba(245, 184, 0, 0.2);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(18px) scale(0.96);
+  transform: translateY(16px) scale(0.96);
   overflow: hidden;
   pointer-events: none;
   box-sizing: border-box;
   transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
-}
-
-.reward-shimmer {
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    115deg,
-    transparent 38%,
-    rgba(255, 185, 0, 0.08) 46%,
-    rgba(255, 246, 200, 0.32) 50%,
-    rgba(255, 185, 0, 0.08) 54%,
-    transparent 62%
-  );
-  transform: translateX(-100%);
-  pointer-events: none;
-}
-
-.white-container.is-revealed .reward-shimmer {
-  animation: reward-sweep 1.8s cubic-bezier(0.2, 0.8, 0.25, 1) 0.2s forwards;
-}
-
-@keyframes reward-sweep {
-  0% { transform: translateX(-100%) rotate(0deg); }
-  100% { transform: translateX(100%) rotate(0deg); }
 }
 
 .white-container.is-revealed .reward-card {
@@ -922,13 +1059,13 @@ body.state-revealed .page-wrap {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
-  animation: card-reveal-pop 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: card-reveal-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes card-reveal-pop {
   0% {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translateY(18px) scale(0.95);
   }
   100% {
     opacity: 1;
@@ -936,104 +1073,143 @@ body.state-revealed .page-wrap {
   }
 }
 
-/* Prominent Brand Logo at the Top of the Reward Screen */
+/* Brand Logo at the Top of Result Card (Framed on dark green pill) */
 .reward-logo-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 0 0 12px;
+  background: var(--stage-edge);
+  padding: 6px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--chip-line);
 }
 
 .reward-logo {
   display: block;
   width: auto;
-  height: clamp(62px, 8vh, 76px);
+  height: clamp(56px, 8vh, 72px);
   max-width: 175px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(184, 115, 0, 0.26));
+  filter: drop-shadow(0 2px 8px rgba(245, 184, 0, 0.35));
   user-select: none;
   -webkit-user-select: none;
-  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.25, 1);
 }
 
-.reward-logo:hover {
-  transform: scale(1.03);
-}
-
-/* Understated Arabian-inspired Ornamental Accent */
 .reward-ornament {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  max-width: 220px;
-  margin: 0 auto 16px;
+  max-width: 190px;
+  margin: 0 auto 12px;
   opacity: 0.85;
 }
 
 .ornament-line {
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 185, 0, 0.65), transparent);
+  background: linear-gradient(90deg, transparent, var(--gold-600), transparent);
 }
 
 .ornament-gem {
-  color: #C78600;
-  font-size: 13px;
+  color: var(--gold-600);
+  font-size: 12px;
   line-height: 1;
 }
 
-/* 1. Result Screen Header: TIME'S UP! and Player's Actual Final Score */
 .reward-result-header {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   width: 100%;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .reward-kicker-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
-}
-
-.kicker-star {
-  color: #FFB900;
-  font-size: 11px;
+  margin-bottom: 6px;
 }
 
 .reward-kicker {
-  margin: 0;
-  color: #B45309;
-  font-family: var(--sans);
-  font-size: 12.5px;
+  color: var(--gold-600);
   font-weight: 800;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.22em;
 }
 
+.kicker-star {
+  color: var(--gold-600);
+  font-size: 10px;
+}
+
+.reward-card.is-loss .reward-kicker-badge {
+  background: rgba(255, 107, 74, 0.12);
+  border: 1px solid rgba(255, 107, 74, 0.35);
+  border-radius: 999px;
+  padding: 2.5px 12px;
+}
+
+.reward-card.is-loss .reward-kicker {
+  color: var(--spice-600);
+}
+
+.reward-card.is-loss .kicker-star {
+  color: var(--danger);
+}
+
+/* Prominent "YOU LOST!" Heading */
+.reward-loss-headline {
+  margin: 0 0 10px;
+  color: var(--brown-900);
+  font-family: var(--sans);
+  font-size: clamp(26px, 6vw, 34px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  display: none;
+}
+
+.reward-card.is-loss .reward-loss-headline {
+  display: block;
+  animation: loss-pop-in 0.4s cubic-bezier(0.18, 0.85, 0.3, 1) forwards;
+}
+
+@keyframes loss-pop-in {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* CRITICAL: Never display the offer card, coupon, promotion, or claim after losing */
+.reward-card.is-loss .reward-offer-card {
+  display: none !important;
+}
+
+/* Score Card */
 .reward-score-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 24px 12px;
-  background: linear-gradient(180deg, #FFFDF8 0%, #FAF3E6 100%);
-  border: 1px solid rgba(255, 185, 0, 0.4);
+  padding: 10px 22px 11px;
+  background: var(--sand-200);
+  border: 1px solid var(--chip-line);
   border-radius: 14px;
-  box-shadow: 0 4px 14px rgba(68, 44, 18, 0.04);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   margin-bottom: 4px;
-  min-width: 220px;
+  min-width: 200px;
 }
 
 .reward-score-label {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.18em;
-  color: #8C7862;
+  color: var(--brown-900);
+  opacity: 0.8;
   text-transform: uppercase;
   margin-bottom: 2px;
 }
@@ -1045,117 +1221,142 @@ body.state-revealed .page-wrap {
 }
 
 .reward-score-number {
-  color: #C78600;
+  color: var(--brown-900);
   font-size: clamp(32px, 7vw, 42px);
   font-weight: 900;
   line-height: 1.05;
   letter-spacing: -0.02em;
 }
 
-.reward-score-unit {
-  font-size: 12px;
-  font-weight: 800;
-  color: #9C7D54;
-  letter-spacing: 0.08em;
-}
-
 .reward-score-summary {
-  margin: 6px 0 0;
-  color: var(--text-body);
+  margin: 4px 0 0;
+  color: var(--brown-900);
   font-family: var(--sans);
-  font-size: 13.5px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.4;
 }
 
-/* 2. Highlighted Special Offer Card (Main Attraction) */
+/* Action Buttons: Play Again (Primary Gold) */
+.reward-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.play-again-btn {
+  width: 100%;
+  min-height: 48px;
+  padding: 13px 28px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--gold-300) 0%, var(--gold-500) 50%, var(--gold-600) 100%);
+  color: var(--brown-900);
+  border: none;
+  box-shadow: 0 4px 18px rgba(245, 184, 0, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.play-again-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 24px rgba(245, 184, 0, 0.6);
+}
+
+.play-again-btn:active {
+  transform: translateY(1px);
+}
+
+/* Footer on Result Card */
+.reward-brand-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: var(--stage-edge);
+  border: 1px solid var(--chip-line);
+  border-radius: 999px;
+  width: auto;
+}
+
+.reward-brand-text {
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.reward-brand-dot {
+  color: var(--gold-500);
+  font-weight: 900;
+}
+
+/* Highlighted Special Offer Card */
 .reward-offer-card {
   position: relative;
   width: 100%;
-  padding: 22px 24px 20px;
-  margin-bottom: 20px;
+  padding: 18px 20px 16px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: linear-gradient(180deg, #FFFDF8 0%, #FFF9EB 100%);
-  border: 1.5px solid rgba(255, 185, 0, 0.65);
-  border-radius: 18px;
-  box-shadow:
-    0 8px 28px rgba(255, 185, 0, 0.16),
-    0 2px 8px rgba(68, 44, 18, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 0 0 1px rgba(255, 235, 160, 0.4);
-  overflow: hidden;
+  background: var(--gold-sheen);
+  border: 1.5px dashed var(--border-gold);
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(68, 44, 18, 0.04);
   box-sizing: border-box;
-}
-
-.reward-panel-sweep {
-  position: absolute;
-  top: -60%;
-  left: -60%;
-  width: 220%;
-  height: 220%;
-  background: linear-gradient(
-    115deg,
-    transparent 35%,
-    rgba(255, 255, 255, 0.6) 47%,
-    rgba(255, 235, 170, 0.85) 50%,
-    rgba(255, 255, 255, 0.6) 53%,
-    transparent 65%
-  );
-  transform: translateX(-100%);
-  pointer-events: none;
-}
-
-.white-container.is-revealed .reward-panel-sweep {
-  animation: panel-sweep 1.8s cubic-bezier(0.2, 0.8, 0.25, 1) 0.3s 1 forwards;
-}
-
-@keyframes panel-sweep {
-  0% { transform: translateX(-100%) rotate(0deg); }
-  100% { transform: translateX(100%) rotate(0deg); }
-}
-
-.reward-offer-header {
-  margin-bottom: 10px;
 }
 
 .reward-offer-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 15px;
-  background: linear-gradient(135deg, rgba(255, 185, 0, 0.24) 0%, rgba(255, 215, 80, 0.14) 100%);
-  border: 1px solid rgba(199, 134, 0, 0.45);
+  padding: 4px 14px;
+  background: var(--gold-light);
+  border: 1px solid var(--border-gold);
   border-radius: 999px;
-  color: #8F5600;
+  color: var(--gold-dark);
   font-family: var(--sans);
   font-size: 10.5px;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  box-shadow: 0 2px 6px rgba(255, 185, 0, 0.12);
 }
 
 .reward-offer-title {
-  margin: 0 0 8px;
-  color: #2A1706;
+  margin: 8px 0 6px;
+  color: var(--text-dark);
   font-family: var(--sans);
-  font-size: clamp(20px, 4.4vw, 24px);
+  font-size: clamp(18px, 4.2vw, 22px);
   font-weight: 800;
   line-height: 1.25;
-  letter-spacing: -0.01em;
 }
 
 .reward-offer-desc {
-  margin: 0 0 12px;
-  color: #544436;
+  margin: 0 0 10px;
+  color: var(--text-body);
   font-family: var(--sans);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
-  line-height: 1.48;
-  max-width: 380px;
+  line-height: 1.45;
+  max-width: 360px;
 }
 
 .reward-offer-meta {
@@ -1169,131 +1370,32 @@ body.state-revealed .page-wrap {
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px dashed rgba(184, 115, 0, 0.38);
+  background: #FAF6EF;
+  border: 1px solid var(--border-card);
   border-radius: 999px;
-  color: #7A6753;
+  color: var(--gold-dark);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .offer-status-pill svg {
-  color: #C78600;
+  color: var(--gold-deep);
+  flex-shrink: 0;
+}
+  color: var(--gold-500);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.offer-status-pill svg {
+  color: var(--gold-500);
   flex-shrink: 0;
 }
 
-/* 3. Action Buttons: Play Again (Primary Gold) & Reset Demo (Secondary Outlined) */
-.reward-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  max-width: 340px;
-  margin-bottom: 18px;
-}
-
-.play-again-btn {
-  width: 100%;
-  padding: 14px 28px;
-  font-family: var(--sans);
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #FFC933 0%, #FFB900 50%, #E5A300 100%);
-  color: #2D1B00;
-  border: none;
-  box-shadow: 0 6px 20px rgba(255, 185, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.08);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.25, 1);
-}
-
-.play-again-btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 26px rgba(255, 185, 0, 0.52);
-}
-
-.play-again-btn:active {
-  transform: translateY(1px);
-  box-shadow: 0 3px 10px rgba(255, 185, 0, 0.32);
-}
-
-.play-again-btn:focus-visible {
-  outline: 3px solid var(--gold);
-  outline-offset: 3px;
-}
-
-.reward-reset-btn {
-  width: 100%;
-  padding: 10px 24px;
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  border-radius: 999px;
-  background: #FFFFFF;
-  color: var(--text-body);
-  border: 1.5px solid rgba(199, 134, 0, 0.45);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.reward-reset-btn:hover {
-  background: #FFFDF8;
-  border-color: var(--gold-dark);
-  color: var(--gold-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 185, 0, 0.2);
-}
-
-.reward-reset-btn:active {
-  transform: translateY(1px);
-}
-
-.reward-reset-btn:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 3px;
-}
-
-/* 4. Understated Brand Section */
-.reward-brand-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 185, 0, 0.2);
-  width: 100%;
-}
-
-.reward-brand-text {
-  font-family: var(--sans);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.reward-brand-dot {
-  color: var(--gold);
-  font-weight: 900;
-}
-
 /* =========================================================================
-   FULL-SCREEN CONFETTI CELEBRATION OVERLAY
+   FULL-SCREEN CELEBRATION CONFETTI
    ========================================================================= */
 .fullscreen-confetti-overlay {
   position: fixed;
@@ -1320,12 +1422,8 @@ body.state-revealed .page-wrap {
     transform: translate3d(var(--x-start), -30px, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
     opacity: 0;
   }
-  10% {
-    opacity: 1;
-  }
-  85% {
-    opacity: 0.95;
-  }
+  10% { opacity: 1; }
+  85% { opacity: 0.95; }
   100% {
     transform: translate3d(var(--x-end), 105vh, 0) rotateX(var(--rot-x)) rotateY(var(--rot-y)) rotateZ(var(--rot-z));
     opacity: 0;
@@ -1333,121 +1431,212 @@ body.state-revealed .page-wrap {
 }
 
 @keyframes confetti-cannon-left {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.3);
-    opacity: 0;
-  }
-  12% {
-    opacity: 1;
-  }
-  42% {
-    transform: translate3d(calc(var(--dx) * 0.65), var(--apex-y), 0) rotate(calc(var(--rot) * 0.45)) scale(1);
-    opacity: 1;
-  }
-  75% {
-    opacity: 0.95;
-  }
-  100% {
-    transform: translate3d(var(--dx), var(--fall-y), 0) rotate(var(--rot)) scale(0.85);
-    opacity: 0;
-  }
+  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(0.3); opacity: 0; }
+  12% { opacity: 1; }
+  42% { transform: translate3d(calc(var(--dx) * 0.65), var(--apex-y), 0) rotate(calc(var(--rot) * 0.45)) scale(1); opacity: 1; }
+  75% { opacity: 0.95; }
+  100% { transform: translate3d(var(--dx), var(--fall-y), 0) rotate(var(--rot)) scale(0.85); opacity: 0; }
 }
 
 @keyframes confetti-cannon-right {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.3);
-    opacity: 0;
-  }
-  12% {
-    opacity: 1;
-  }
-  42% {
-    transform: translate3d(calc(var(--dx) * 0.65), var(--apex-y), 0) rotate(calc(var(--rot) * 0.45)) scale(1);
-    opacity: 1;
-  }
-  75% {
-    opacity: 0.95;
-  }
-  100% {
-    transform: translate3d(var(--dx), var(--fall-y), 0) rotate(var(--rot)) scale(0.85);
-    opacity: 0;
-  }
+  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(0.3); opacity: 0; }
+  12% { opacity: 1; }
+  42% { transform: translate3d(calc(var(--dx) * 0.65), var(--apex-y), 0) rotate(calc(var(--rot) * 0.45)) scale(1); opacity: 1; }
+  75% { opacity: 0.95; }
+  100% { transform: translate3d(var(--dx), var(--fall-y), 0) rotate(var(--rot)) scale(0.85); opacity: 0; }
 }
 
 @keyframes confetti-burst-radial {
-  0% {
-    transform: translate3d(var(--cx), var(--cy), 0) scale(0.2);
-    opacity: 0;
+  0% { transform: translate3d(var(--cx), var(--cy), 0) scale(0.2); opacity: 0; }
+  15% { opacity: 1; }
+  50% { transform: translate3d(calc(var(--cx) + var(--dx)), calc(var(--cy) + var(--dy) * 0.5), 0) rotate(calc(var(--rot) * 0.5)) scale(1); opacity: 1; }
+  85% { opacity: 0.9; }
+  100% { transform: translate3d(calc(var(--cx) + var(--dx) * 1.3), calc(var(--cy) + var(--dy) + 180px), 0) rotate(var(--rot)) scale(0.8); opacity: 0; }
+}
+
+/* =========================================================================
+   RESPONSIVE DESIGN (Mobile Portrait, Tablet, Landscape, Desktop)
+   ========================================================================= */
+
+/* Tablet Adaptations */
+@media (max-width: 900px) {
+  .page-wrap {
+    padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   }
-  15% {
-    opacity: 1;
-  }
-  50% {
-    transform: translate3d(calc(var(--cx) + var(--dx)), calc(var(--cy) + var(--dy) * 0.5), 0) rotate(calc(var(--rot) * 0.5)) scale(1);
-    opacity: 1;
-  }
-  85% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translate3d(calc(var(--cx) + var(--dx) * 1.3), calc(var(--cy) + var(--dy) + 180px), 0) rotate(var(--rot)) scale(0.8);
-    opacity: 0;
+  .bucket-layer {
+    width: 110px;
+    height: 110px;
   }
 }
 
-/* Discreet Reset Demo Button (Internal to reward card) */
-.reset-wrap {
-  display: none !important;
+/* Mobile Adaptations (Portrait Primary) */
+@media (max-width: 600px) {
+  .page-wrap {
+    padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+
+  /* Noticeably larger logo on mobile with preserved aspect ratio */
+  .brand-logo {
+    height: clamp(56px, 8vh, 70px);
+    max-width: 180px;
+  }
+
+  .intro-logo {
+    height: clamp(74px, 11vh, 92px);
+    max-width: 210px;
+  }
+
+  .intro-heading {
+    font-size: clamp(23px, 6vw, 29px);
+  }
+
+  .game-title {
+    font-size: 19px;
+  }
+
+  .game-subtitle {
+    font-size: 12.5px;
+    margin-bottom: 10px;
+  }
+
+  .intro-bucket-wrap {
+    width: 140px;
+    height: 125px;
+    margin: 4px auto 12px;
+  }
+
+  .start-game-btn {
+    min-height: 46px;
+    padding: 12px 36px;
+    font-size: 13px;
+  }
+
+  .hud-pill {
+    min-width: 82px;
+    height: 34px;
+    padding: 3px 10px;
+    gap: 4px;
+  }
+
+  .hud-label {
+    font-size: 9.5px;
+  }
+
+  .hud-value {
+    font-size: 13px;
+  }
+
+  .hud-title-eyebrow {
+    font-size: 7.5px;
+  }
+
+  .hud-title-main {
+    font-size: 12px;
+  }
+
+  .game-play-area {
+    margin-top: 4px;
+    border-radius: 16px;
+    min-height: 260px;
+  }
+
+  .bucket-layer {
+    width: 90px;
+    height: 90px;
+    bottom: 6px;
+  }
+
+  .falling-food-item .food-img {
+    width: 60px;
+    height: 48px;
+  }
+
+  .falling-food-item .food-name-tag {
+    font-size: 9.5px;
+    padding: 2px 7px;
+  }
+
+  .reward-card {
+    padding: 18px 16px 16px;
+    border-radius: 18px;
+  }
+
+  .reward-loss-headline {
+    font-size: clamp(23px, 7vw, 30px);
+    margin-bottom: 8px;
+  }
+
+  .reward-score-number {
+    font-size: clamp(28px, 8vw, 36px);
+  }
+
+  .play-again-btn {
+    min-height: 46px;
+    padding: 12px 24px;
+    font-size: 13px;
+  }
 }
 
-.reset-demo-btn {
-  display: inline-flex;
-  padding: 8px 22px;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border: 1px solid rgba(184, 115, 0, 0.28);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.75);
-  color: var(--text-body);
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-}
-
-.reset-demo-btn:hover {
-  background: #FFFFFF;
-  border-color: var(--gold);
-  color: var(--gold-dark);
-  box-shadow: 0 4px 14px rgba(255, 185, 0, 0.24);
-  transform: translateY(-1px);
-}
-
-.reset-demo-btn:active {
-  transform: translateY(1px);
-}
-
-/* Footer Note */
-.footer-note {
-  display: flex;
-  margin-top: auto;
-  padding-top: 20px;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-muted);
-  font-family: var(--sans);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-align: center;
-}
-
-.footer-note span {
-  color: var(--gold);
+/* Very short screens or landscape orientation */
+@media (max-height: 520px) {
+  .page-wrap {
+    padding: 4px 8px;
+  }
+  .intro-logo {
+    height: 50px;
+  }
+  .intro-heading {
+    font-size: 18px;
+    margin-bottom: 1px;
+  }
+  .game-title {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+  .game-subtitle {
+    display: none;
+  }
+  .intro-bucket-wrap {
+    width: 90px;
+    height: 75px;
+    margin: 2px auto 8px;
+  }
+  .start-game-btn {
+    min-height: 38px;
+    padding: 8px 24px;
+    font-size: 12px;
+  }
+  .footer-note {
+    display: none;
+  }
+  .brand-logo {
+    height: 42px;
+  }
+  .game-hud {
+    padding-bottom: 3px;
+  }
+  .hud-pill {
+    height: 28px;
+    min-width: 72px;
+    padding: 2px 8px;
+  }
+  .reward-card {
+    padding: 12px 14px;
+  }
+  .reward-logo {
+    height: 42px;
+  }
+  .reward-loss-headline {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .reward-score-number {
+    font-size: 24px;
+  }
+  .play-again-btn {
+    min-height: 38px;
+    padding: 8px 20px;
+  }
 }
 
 /* Accessibility: Respect Reduced-Motion Preference */
@@ -1464,204 +1653,260 @@ body.state-revealed .page-wrap {
   }
 }
 
-/* Tablet Adaptations */
-@media (max-width: 900px) {
-  .page-wrap {
-    width: min(96vw, 860px);
-  }
-
-  .game-play-area {
-    height: clamp(400px, 58vh, 560px);
-  }
-
-  .bucket-layer {
-    width: 110px;
-    height: 110px;
-  }
+/* =========================================================================
+   LEADERBOARD MODAL DIALOG
+   ========================================================================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 42, 32, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
-/* Mobile Adaptations */
-@media (max-width: 600px) {
-  .page-wrap {
-    width: min(100% - 20px, 100%);
-    padding-top: 12px;
-    padding-bottom: 14px;
-  }
+.modal-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-  .brand-logo {
-    height: clamp(46px, 7vh, 58px);
-  }
+.modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(175deg, #184F3B 0%, #0D3427 60%, #0A2A20 100%);
+  border: 1px solid var(--gold-500);
+  border-radius: 20px;
+  padding: 20px 18px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(245, 184, 0, 0.25);
+  transform: scale(0.92) translateY(10px);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.25, 1);
+  overflow: hidden;
+}
 
-  .white-container.is-intro {
-    padding: 18px 14px 16px;
-    min-height: auto;
-  }
+.modal-backdrop.is-open .modal-card {
+  transform: scale(1) translateY(0);
+}
 
-  .white-container.is-playing {
-    padding: 12px 10px 14px;
-  }
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--chip-line);
+}
 
-  .intro-logo {
-    height: clamp(42px, 6vh, 52px);
-    max-width: 120px;
-  }
+.modal-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
 
-  .intro-logo-wrap {
-    margin-bottom: 6px;
-  }
+.modal-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--gold-500);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
 
-  .intro-eyebrow {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-  }
+.modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--cream-50);
+  margin: 0;
+}
 
-  .intro-heading {
-    font-size: clamp(23px, 6vw, 29px);
-    margin-bottom: 4px;
-  }
+.modal-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.3;
+}
 
-  .game-title {
-    font-size: 19px;
-    margin-bottom: 6px;
-  }
+.modal-close-btn {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-line);
+  color: var(--cream-50);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
 
-  .game-subtitle {
-    font-size: 12.5px;
-    margin-bottom: 12px;
-  }
+.modal-close-btn:hover {
+  background: rgba(245, 184, 0, 0.2);
+  border-color: var(--gold-500);
+  color: var(--gold-300);
+}
 
-  .intro-bucket-wrap {
-    width: 130px;
-    height: 115px;
-    margin: 8px auto 14px;
-  }
+/* Player Bar Strip */
+.modal-player-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  margin: 12px 0;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(245, 184, 0, 0.2);
+  border-radius: 12px;
+}
 
-  .intro-instruction-wrap {
-    gap: 6px;
-    margin-bottom: 16px;
-  }
+.player-bar-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+}
 
-  .game-instruction {
-    font-size: 11.5px;
-  }
+.player-bar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cream-50);
+  white-space: nowrap;
+}
 
-  .start-game-btn {
-    padding: 12px 36px;
-    font-size: 13px;
-  }
+.player-name-input {
+  background: rgba(10, 42, 32, 0.8);
+  border: 1px solid var(--gold-500);
+  border-radius: 6px;
+  color: var(--gold-300);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 8px;
+  outline: none;
+  width: 120px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
 
-  .btn-intro-reset {
-    padding: 7px 20px;
-    font-size: 11px;
-  }
+.player-name-input:focus {
+  border-color: var(--gold-300);
+  box-shadow: 0 0 8px rgba(245, 184, 0, 0.4);
+}
 
-  /* Responsive playfield height targeting 55-65svh */
-  .game-play-area {
-    height: clamp(380px, 58svh, 540px);
-    margin-top: 8px;
-  }
+.btn-save-name {
+  background: var(--gold-500);
+  color: var(--brown-900);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
 
-  .hud-pill {
-    min-width: 95px;
-    height: 36px;
-    padding: 4px 12px;
-    gap: 6px;
-    font-size: 10px;
-    border-radius: 999px;
-  }
+.btn-save-name:hover {
+  background: var(--gold-300);
+}
 
-  .hud-value {
-    font-size: 13.5px;
-  }
+.player-stats-chip {
+  font-size: 11px;
+  color: var(--text-muted);
+}
 
-  .hud-title-eyebrow {
-    font-size: 8px;
-  }
+.player-stats-chip strong {
+  color: var(--gold-300);
+}
 
-  .hud-title-main {
-    font-size: 12px;
-  }
+/* Leaderboard Table */
+.leaderboard-table-wrap {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 160px;
+  max-height: 320px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 184, 0, 0.15);
+  background: rgba(0, 0, 0, 0.15);
+}
 
-  .falling-food-item .food-img {
-    width: 60px;
-    height: 48px;
-  }
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
 
-  .falling-food-item .food-name-tag {
-    font-size: 9.5px;
-    padding: 2px 7px;
-    margin-top: 2px;
-  }
+.leaderboard-table th {
+  position: sticky;
+  top: 0;
+  background: #0E3628;
+  color: var(--gold-500);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--chip-line);
+  z-index: 2;
+}
 
-  .bucket-layer {
-    width: 90px;
-    height: 90px;
-    bottom: 6px;
-  }
+.leaderboard-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 248, 231, 0.05);
+  color: var(--cream-50);
+}
 
-  .bucket-drag-indicator {
-    bottom: 64px;
-    font-size: 8.5px;
-  }
+.leaderboard-table tr:last-child td {
+  border-bottom: none;
+}
 
-  .white-container.is-results,
-  .white-container.is-revealed {
-    padding: 18px 14px;
-    min-height: auto;
-  }
+.leaderboard-table tr.is-current-player {
+  background: rgba(245, 184, 0, 0.15);
+  font-weight: 700;
+}
 
-  .reward-card {
-    max-width: 100%;
-    padding: 20px 16px 16px;
-  }
+.leaderboard-table tr.is-current-player td {
+  color: var(--gold-300);
+}
 
-  .reward-result-header {
-    margin-bottom: 12px;
-  }
+.th-rank, .td-rank { width: 44px; text-align: center; }
+.th-score, .td-score { width: 60px; text-align: right; color: var(--gold-300); font-weight: 700; }
+.th-date, .td-date { width: 70px; text-align: right; font-size: 10.5px; color: var(--text-muted); }
 
-  .reward-kicker {
-    font-size: 11px;
-  }
+.rank-badge-top1 { color: #FFD700; font-weight: 800; font-size: 14px; }
+.rank-badge-top2 { color: #C0C0C0; font-weight: 800; font-size: 13px; }
+.rank-badge-top3 { color: #CD7F32; font-weight: 800; font-size: 13px; }
 
-  .reward-score-heading {
-    font-size: 21px;
-  }
+.leaderboard-loading,
+.leaderboard-empty {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
 
-  .reward-score-summary {
-    font-size: 12px;
-  }
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+}
 
-  .reward-offer-card {
-    padding: 14px 12px 12px;
-    margin-bottom: 14px;
-  }
-
-  .reward-offer-badge {
-    font-size: 9px;
-    padding: 3px 10px;
-  }
-
-  .reward-offer-title {
-    font-size: 17px;
-  }
-
-  .reward-offer-desc {
-    font-size: 11.5px;
-  }
-
-  .reward-actions {
-    max-width: 100%;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-
-  .play-again-btn {
-    padding: 10px 20px;
-    font-size: 12px;
-  }
-
-  .reward-reset-btn {
-    padding: 9px 18px;
-    font-size: 11.5px;
-  }
+.modal-done-btn {
+  padding: 10px 36px;
+  font-size: 12px;
+  font-weight: 700;
 }
