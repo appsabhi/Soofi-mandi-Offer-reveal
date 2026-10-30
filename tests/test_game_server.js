@@ -142,37 +142,39 @@ async function runTests() {
 
   // 3. Valid Score Submission & Deterministic Tie-Breaking
   await test("POST /api/leaderboard accepts valid scores and applies deterministic tie-breaking", async () => {
-    const p1 = "test-player-uuid-alpha";
-    const p2 = "test-player-uuid-beta";
+    const ts = Date.now();
+    const p1 = `test-player-uuid-alpha-${ts}`;
+    const p2 = `test-player-uuid-beta-${ts}`;
+    const testScore = 998;
 
-    // Player 1 submits score 15
+    // Player 1 submits high score
     const res1 = await request("POST", "/api/leaderboard", {
       playerId: p1,
       displayName: "Alpha Feaster",
-      score: 15,
-      foodCaught: 15,
+      score: testScore,
+      foodCaught: testScore,
       missedCount: 5,
-      durationSeconds: 20
+      durationSeconds: 350
     });
     assert.strictEqual(res1.status, 201);
     assert.strictEqual(res1.json.success, true);
 
-    await sleep(50); // slight time difference for submission date
+    await sleep(60); // slight time difference for submission date
 
-    // Player 2 submits identical score 15
+    // Player 2 submits identical score
     const res2 = await request("POST", "/api/leaderboard", {
       playerId: p2,
       displayName: "Beta Feaster",
-      score: 15,
-      foodCaught: 15,
+      score: testScore,
+      foodCaught: testScore,
       missedCount: 5,
-      durationSeconds: 18
+      durationSeconds: 350
     });
     assert.strictEqual(res2.status, 201);
 
     // Verify tie breaking: Alpha submitted earlier, so Alpha must rank ahead of Beta!
     const lbRes = await request("GET", "/api/leaderboard");
-    const top2 = lbRes.json.leaderboard.filter(e => e.score === 15);
+    const top2 = lbRes.json.leaderboard.filter(e => e.player_id === p1 || e.player_id === p2);
     assert.strictEqual(top2.length >= 2, true);
     assert.strictEqual(top2[0].player_id, p1);
     assert.strictEqual(top2[1].player_id, p2);

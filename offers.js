@@ -1,14 +1,24 @@
 // Soofi Mandi — Demo Placeholder Offer Configuration
 // Clean, easy to replace when the client confirms the actual offer.
-window.SOOFI_MANDI_DEMO_OFFERS = [
+const SOOFI_MANDI_DEMO_OFFERS = [
   {
     id: "offer-main",
-    badge: "YOUR SPECIAL OFFER",
-    title: "Demo offer · To be confirmed",
-    description: "Special promotion details will be updated soon.",
-    brand: "SOOFI MANDI · YEMENI CUISINE"
+    badge: "YOUR FEAST REWARD",
+    title: "Complimentary Yemeni Delicacy",
+    description: "Enjoy a special feast reward with your dine-in experience.",
+    brand: "SOOFI MANDI · YEMENI CUISINE",
+    instructions: "Show this screen to our staff to claim your reward."
   }
 ];
 
-// Fallback legacy global for backward compatibility
-window.SOOfiMandiOffers = window.SOOFI_MANDI_DEMO_OFFERS;
+if (typeof window !== "undefined") {
+  window.SOOFI_MANDI_DEMO_OFFERS = SOOFI_MANDI_DEMO_OFFERS;
+  window.SOOfiMandiOffers = SOOFI_MANDI_DEMO_OFFERS;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    SOOFI_MANDI_DEMO_OFFERS,
+    DEFAULT_OFFER: SOOFI_MANDI_DEMO_OFFERS[0]
+  };
+}

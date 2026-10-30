@@ -27,3 +27,4 @@ console.log({
 // Sample records
 console.log('Sample players:', db.prepare('SELECT * FROM players LIMIT 3').all());
 console.log('Sample leaderboard:', db.prepare('SELECT * FROM leaderboard LIMIT 3').all());
+
