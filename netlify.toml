@@ -1,0 +1,25 @@
+# Netlify Configuration for Soofi Mandi — Catch the Feast
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Route /admin/game-analytics dashboard to the backend function
+[[redirects]]
+  from = "/admin/game-analytics"
+  to = "/.netlify/functions/api/admin/game-analytics"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/admin/game-analytics/*"
+  to = "/.netlify/functions/api/admin/game-analytics/:splat"
+  status = 200
+  force = true
+
+# Route all /api/* requests to the Netlify backend function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true

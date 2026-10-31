@@ -92,7 +92,36 @@ const dbReadyPromise = db.init().catch(err => {
 });
 
 const PORT = parseInt(process.env.PORT || "3000", 10);
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "soofi_admin_2026";
+
+const isProductionServer = (
+  process.env.NODE_ENV === "production" ||
+  process.env.CONTEXT === "production" ||
+  process.env.VERCEL_ENV === "production" ||
+  ((Boolean(process.env.NETLIFY) || Boolean(process.env.VERCEL)) && process.env.NODE_ENV !== "test" && process.env.LOCAL_DEV !== "1")
+);
+
+const INSECURE_DEFAULT_PASSWORDS = new Set([
+  "soofi_admin_2026",
+  "admin",
+  "password",
+  "123456",
+  "admin123",
+  "root"
+]);
+
+function getValidatedAdminPassword() {
+  const envPass = process.env.ADMIN_PASSWORD ? String(process.env.ADMIN_PASSWORD).trim() : "";
+  if (isProductionServer) {
+    if (!envPass) {
+      return null;
+    }
+    if (INSECURE_DEFAULT_PASSWORDS.has(envPass) || envPass.length < 10) {
+      return null;
+    }
+    return envPass;
+  }
+  return envPass || "soofi_admin_2026";
+}
 
 // In-memory rate limiting and event deduplication
 const submissionRateMap = new Map(); // playerId -> lastSubmissionTimestamp
@@ -102,6 +131,19 @@ const eventDedupMap = new Map();      // hash -> timestamp
 // Helper: Parse JSON body
 function parseJsonBody(req) {
   return new Promise((resolve, reject) => {
+    // If body was already parsed into object or string by serverless runtime/adapter
+    if (req.body !== undefined && req.body !== null) {
+      if (typeof req.body === "object") return resolve(req.body);
+      if (typeof req.body === "string") {
+        if (!req.body.trim()) return resolve({});
+        try {
+          return resolve(JSON.parse(req.body));
+        } catch (err) {
+          return reject(new Error("Invalid JSON"));
+        }
+      }
+    }
+
     let data = "";
     req.on("data", (chunk) => {
       data += chunk;
@@ -945,7 +987,7 @@ function serveAdminDashboardHtml(res) {
 }
 
 // Main HTTP Request Handler
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   await dbReadyPromise;
   const parsedUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   const pathname = parsedUrl.pathname;
@@ -1438,10 +1480,28 @@ const server = http.createServer(async (req, res) => {
   // -------------------------------------------------------------------------
   if (pathname === "/api/admin/login" && method === "POST") {
     try {
+      const configuredPassword = getValidatedAdminPassword();
+      if (!configuredPassword) {
+        return sendJson(res, 503, {
+          success: false,
+          message: isProductionServer
+            ? "Administrative login is disabled in production: A secure ADMIN_PASSWORD environment variable (minimum 10 characters, non-default) must be configured."
+            : "Administrative login is currently unconfigured."
+        });
+      }
+
       const body = await parseJsonBody(req);
       const { password } = body;
 
-      if (!password || password !== ADMIN_PASSWORD) {
+      const inputPass = typeof password === "string" ? password : "";
+      const inputBuffer = Buffer.from(inputPass);
+      const expectedBuffer = Buffer.from(configuredPassword);
+      const isMatch = (
+        inputBuffer.length === expectedBuffer.length &&
+        crypto.timingSafeEqual(inputBuffer, expectedBuffer)
+      );
+
+      if (!isMatch) {
         return sendJson(res, 401, { success: false, message: "Invalid administrative password" });
       }
 
@@ -1581,15 +1641,22 @@ const server = http.createServer(async (req, res) => {
   const filePath = path.join(__dirname, safePath);
 
   serveStaticFile(req, res, filePath);
-});
+}
 
-// Start server
-server.listen(PORT, () => {
-  console.log(`Soofi Mandi "Catch the Feast" Server listening on http://localhost:${PORT}`);
-  console.log(`Admin Game Analytics Dashboard: http://localhost:${PORT}/admin/game-analytics`);
-  dbReadyPromise.then(() => {
-    console.log(`Database backend: ${db.getActiveEngine().toUpperCase()}`);
+const server = http.createServer(handleRequest);
+
+// Start server when run directly or in non-serverless test/dev environments
+if (require.main === module || (!process.env.NETLIFY && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.SERVERLESS)) {
+  server.listen(PORT, () => {
+    console.log(`Soofi Mandi "Catch the Feast" Server listening on http://localhost:${PORT}`);
+    console.log(`Admin Game Analytics Dashboard: http://localhost:${PORT}/admin/game-analytics`);
+    dbReadyPromise.then(() => {
+      console.log(`Database backend: ${db.getActiveEngine().toUpperCase()}`);
+    });
   });
-});
+}
 
 module.exports = server;
+module.exports.server = server;
+module.exports.handleRequest = handleRequest;
+module.exports.dbReadyPromise = dbReadyPromise;

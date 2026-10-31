@@ -85,8 +85,54 @@ function convertParamsForSqlite(sql) {
   return sql.replace(/\$(\d+)/g, '?');
 }
 
+const isProduction = (
+  process.env.NODE_ENV === 'production' ||
+  process.env.CONTEXT === 'production' ||
+  process.env.VERCEL_ENV === 'production' ||
+  ((Boolean(process.env.NETLIFY) || Boolean(process.env.VERCEL)) && process.env.NODE_ENV !== 'test' && process.env.LOCAL_DEV !== '1')
+);
+
 // Initialize Neon Pool
 async function init() {
+  if (isProduction) {
+    if (!DATABASE_URL) {
+      const errMsg = 'FATAL: Production requires DATABASE_URL to connect to Neon PostgreSQL. SQLite fallback is strictly prohibited in production.';
+      console.error(errMsg);
+      throw new Error(errMsg);
+    }
+    try {
+      neonPool = new Pool({
+        connectionString: DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000
+      });
+
+      // Probe connection
+      const res = await neonPool.query('SELECT NOW() as now, version() as version;');
+      activeEngine = 'neon';
+      console.log(`✓ Connected to Neon PostgreSQL (${res.rows[0].version.split(' ')[0]})`);
+
+      // Ensure Neon schema is applied
+      const neonSchemaPath = path.join(__dirname, 'migrations', '002_neon_schema.sql');
+      if (fs.existsSync(neonSchemaPath)) {
+        const schemaSql = fs.readFileSync(neonSchemaPath, 'utf8');
+        await neonPool.query(schemaSql);
+      }
+      return;
+    } catch (err) {
+      const errMsg = `FATAL: Failed to connect to Neon PostgreSQL in production: ${err.message}. Refusing to fall back to SQLite in production.`;
+      console.error(errMsg);
+      if (neonPool) {
+        neonPool.end().catch(() => {});
+        neonPool = null;
+      }
+      throw new Error(errMsg);
+    }
+  }
+
+  // Non-production (local development / offline testing)
   if (DATABASE_URL) {
     try {
       neonPool = new Pool({
@@ -118,7 +164,7 @@ async function init() {
     }
   }
 
-  // SQLite fallback
+  // SQLite fallback for local development only
   initSqlite();
   activeEngine = 'sqlite';
   console.log('✓ Operating on SQLite persistent database storage.');
@@ -137,7 +183,11 @@ async function query(sql, params = []) {
     }
   }
 
-  // SQLite fallback
+  if (isProduction) {
+    throw new Error('Database query failed: Production requires Neon PostgreSQL and active connection is unavailable.');
+  }
+
+  // SQLite fallback (local development only)
   const db = initSqlite();
   const convertedSql = convertParamsForSqlite(sql);
   const stmt = db.prepare(convertedSql);
@@ -177,7 +227,11 @@ async function transaction(callback) {
     }
   }
 
-  // SQLite fallback
+  if (isProduction) {
+    throw new Error('Database transaction failed: Production requires Neon PostgreSQL and active connection is unavailable.');
+  }
+
+  // SQLite fallback (local development only)
   const db = initSqlite();
   db.exec('BEGIN TRANSACTION');
   try {
