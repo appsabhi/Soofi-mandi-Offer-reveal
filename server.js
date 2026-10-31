@@ -198,6 +198,27 @@ function serveStaticFile(req, res, filePath) {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
+    // In production, strip dev testing controls markup from served HTML completely
+    if (process.env.NODE_ENV === "production" && (filePath.endsWith("index.html") || filePath.endsWith("index.htm"))) {
+      fs.readFile(filePath, "utf8", (readErr, htmlContent) => {
+        if (readErr) {
+          res.writeHead(500, { "Content-Type": "text/plain" });
+          res.end("500 Internal Server Error");
+          return;
+        }
+        const strippedHtml = htmlContent.replace(/<aside\s+class="dev-test-panel"[\s\S]*?<\/aside>/i, "");
+        const buf = Buffer.from(strippedHtml, "utf8");
+        res.writeHead(200, {
+          "Content-Type": contentType,
+          "Content-Length": buf.length,
+          "X-Content-Type-Options": "nosniff",
+          "Cache-Control": "no-cache"
+        });
+        res.end(buf);
+      });
+      return;
+    }
+
     res.writeHead(200, {
       "Content-Type": contentType,
       "Content-Length": stats.size,
@@ -523,7 +544,7 @@ function serveAdminDashboardHtml(res) {
       padding: 10px 0;
       border-bottom: 1px solid rgba(245, 184, 0, 0.12);
       display: flex;
-      justify-content: space-between;
+      justify-content: space-between;S
       align-items: center;
       font-size: 12px;
     }
@@ -1095,15 +1116,18 @@ const server = http.createServer(async (req, res) => {
       const numMissed = parseInt(missedCount, 10);
       const numDuration = parseFloat(durationSeconds) || 0;
 
-      if (isNaN(numMissed) || numMissed < 0 || numMissed > 10) {
-        return sendJson(res, 400, { success: false, message: "Invalid missed food count" });
+      if (isNaN(numScore) || numScore < 0 || isNaN(numCaught) || numCaught < 0 || isNaN(numMissed) || numMissed < 0 || numMissed > 10) {
+        return sendJson(res, 400, { success: false, message: "Invalid score, caught, or missed food count" });
       }
 
       let finalVerifiedScore = numScore;
       let finalVerifiedCaught = numCaught;
 
       // 2. Score Verification: Dev test bypass (dev-only), event log verification, or legacy matching
-      if (body.isDevTest && process.env.NODE_ENV !== "production") {
+      if (body.isDevTest) {
+        if (process.env.NODE_ENV === "production") {
+          return sendJson(res, 403, { success: false, message: "Dev test score injection is strictly prohibited in production." });
+        }
         finalVerifiedScore = numScore;
         finalVerifiedCaught = numCaught;
       } else if (Array.isArray(events) && events.length > 0) {
@@ -1132,10 +1156,11 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // 3. Submission Rate Limiting: Max 1 submission per 800ms per player (bypassed for dev tests)
+      // 3. Submission Rate Limiting: Max 1 submission per 800ms per player (bypassed for dev tests in non-production)
       const now = Date.now();
       const lastSub = submissionRateMap.get(playerId) || 0;
-      if (!body.isDevTest && (now - lastSub < 800)) {
+      const isDevBypass = Boolean(body.isDevTest && process.env.NODE_ENV !== "production");
+      if (!isDevBypass && (now - lastSub < 800)) {
         return sendJson(res, 429, { success: false, message: "Too many submissions. Please wait a moment." });
       }
       submissionRateMap.set(playerId, now);

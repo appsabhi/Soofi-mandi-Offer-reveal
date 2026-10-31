@@ -151,7 +151,8 @@ async function runTests() {
 
       // Verify first game score
       const firstScoreText = await session.evaluate(`document.getElementById("reward-score-number").textContent.trim()`);
-      assert(firstScoreText === `${seq.first} / 100`, `Seq [${seq.name}] Game 1: shows "${seq.first} / 100" (got "${firstScoreText}")`);
+      assert(firstScoreText === `${seq.first}`, `Seq [${seq.name}] Game 1: shows "${seq.first}" (got "${firstScoreText}")`);
+      assert(!firstScoreText.includes("/100") && !firstScoreText.includes("/ 100"), `Seq [${seq.name}] Game 1: score has no /100 denominator`);
 
       // Click PLAY AGAIN to start second game
       await session.evaluate(`document.getElementById("play-again-btn").click();`);
@@ -178,8 +179,9 @@ async function runTests() {
 
       // Verify Game Over screen shows ONLY second game's score
       const secondScoreText = await session.evaluate(`document.getElementById("reward-score-number").textContent.trim()`);
-      assert(secondScoreText === `${seq.expectedSecond} / 100`,
-        `Seq [${seq.name}] Game 2 Game Over screen displays "${seq.expectedSecond} / 100" (NOT ${seq.first + seq.second})`);
+      assert(secondScoreText === `${seq.expectedSecond}`,
+        `Seq [${seq.name}] Game 2 Game Over screen displays "${seq.expectedSecond}" (NOT ${seq.first + seq.second})`);
+      assert(!secondScoreText.includes("/100") && !secondScoreText.includes("/ 100"), `Seq [${seq.name}] Game 2: score has no /100 denominator`);
     }
 
     // =========================================================================
@@ -215,7 +217,8 @@ async function runTests() {
       };
     })()`);
 
-    assert(score45UI.scoreNum === "45 / 100", `Score < 100: displays "45 / 100" (got "${score45UI.scoreNum}")`);
+    assert(score45UI.scoreNum === "45", `Score < 100: displays "45" (got "${score45UI.scoreNum}")`);
+    assert(!score45UI.scoreNum.includes("/100") && !score45UI.scoreNum.includes("/ 100"), "Score < 100 has no /100 denominator");
     assert(score45UI.kicker === "GAME OVER", `Score < 100: heading is "GAME OVER" (got "${score45UI.kicker}")`);
     assert(score45UI.scoreSummary === "Reach 100 points to unlock your reward!",
       `Score < 100: summary is "Reach 100 points to unlock your reward!" (got "${score45UI.scoreSummary}")`);
@@ -256,7 +259,8 @@ async function runTests() {
       };
     })()`);
 
-    assert(score115UI.scoreNum === "115 / 100", `Score >= 100: displays "115 / 100" (got "${score115UI.scoreNum}")`);
+    assert(score115UI.scoreNum === "115", `Score >= 100: displays "115" (got "${score115UI.scoreNum}")`);
+    assert(!score115UI.scoreNum.includes("/100") && !score115UI.scoreNum.includes("/ 100"), "Score >= 100 has no /100 denominator");
     assert(score115UI.kicker === "GAME OVER", `Score >= 100: heading is "GAME OVER" (got "${score115UI.kicker}")`);
     assert(score115UI.scoreSummary === "Congratulations! You've unlocked a reward.",
       `Score >= 100: summary is "Congratulations! You've unlocked a reward." (got "${score115UI.scoreSummary}")`);

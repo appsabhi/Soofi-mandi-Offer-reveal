@@ -490,7 +490,7 @@ async function runTests() {
     });
 
     // Browser Test 6: Game Over Screen for Score < 100
-    await test("Game Over Screen for score < 100: displays '<score> / 100', 'Reach 100 points...', disabled 'OFFER LOCKED' button", async () => {
+    await test("Game Over Screen for score < 100: displays '<score>', 'Reach 100 points...', disabled 'OFFER LOCKED' button", async () => {
       await cdp.evaluate(`window.__soofiGame.testOfferUnlock(80);`);
       await sleep(600);
 
@@ -513,7 +513,8 @@ async function runTests() {
         };
       })()`);
 
-      assert.strictEqual(ui80.scoreText, "80 / 100");
+      assert.strictEqual(ui80.scoreText, "80");
+      assert.ok(!ui80.scoreText.includes("/100") && !ui80.scoreText.includes("/ 100"), "Score text must not contain /100 denominator");
       assert.strictEqual(ui80.summaryText, "Reach 100 points to unlock your reward!");
       assert.strictEqual(ui80.lockedBtnExists, true);
       assert.strictEqual(ui80.lockedBtnDisabled, true);
@@ -527,7 +528,7 @@ async function runTests() {
     await sleep(2800);
 
     // Browser Test 7: Game Over Screen for Score >= 100
-    await test("Game Over Screen for score >= 100: displays '<score> / 100', 'Congratulations! You've unlocked a reward.', enabled 'UNLOCK MY OFFER' button", async () => {
+    await test("Game Over Screen for score >= 100: displays '<score> ', 'Congratulations! You've unlocked a reward.', enabled 'UNLOCK MY OFFER' button", async () => {
       await cdp.evaluate(`window.__soofiGame.testOfferUnlock(120);`);
       await sleep(1500);
 
@@ -546,7 +547,8 @@ async function runTests() {
         };
       })()`);
 
-      assert.strictEqual(ui120.scoreText, "120 / 100");
+      assert.strictEqual(ui120.scoreText, "120");
+      assert.ok(!ui120.scoreText.includes("/100") && !ui120.scoreText.includes("/ 100"), "Score text must not contain /100 denominator");
       assert.strictEqual(ui120.summaryText, "Congratulations! You've unlocked a reward.");
       assert.strictEqual(ui120.bannerVisible, true);
       assert.strictEqual(ui120.lockedWrapHidden, true);

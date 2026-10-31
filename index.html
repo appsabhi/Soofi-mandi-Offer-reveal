@@ -100,7 +100,7 @@
 
           <!-- VIEW 2: Active Gameplay Screen -->
           <div class="game-view game-view-playing" id="view-playing" aria-hidden="true">
-            <!-- Compact Status Bar Directly Above Playfield (Score & Misses Chips, NO timer) -->
+            <!-- Compact Status Bar Directly Above Playfield (Score, Misses & Pause, NO timer) -->
             <div class="game-hud">
               <div class="hud-pill hud-score" aria-label="Current score">
                 <span class="hud-label">SCORE:</span>
@@ -110,9 +110,15 @@
                 <span class="hud-title-eyebrow">SOOFI MANDI</span>
                 <span class="hud-title-main">CATCH THE FEAST</span>
               </div>
-              <div class="hud-pill hud-misses" id="hud-misses" aria-label="Missed food items">
-                <span class="hud-label">MISSES:</span>
-                <span class="hud-value" id="game-misses">0/5</span>
+              <div class="hud-right-group">
+                <div class="hud-pill hud-misses" id="hud-misses" aria-label="Missed food items">
+                  <span class="hud-label">MISSES:</span>
+                  <span class="hud-value" id="game-misses">0/5</span>
+                </div>
+                <button type="button" class="hud-pause-btn" id="hud-pause-btn" aria-label="Pause Game" title="Pause Game (Esc or P)">
+                  <span class="pause-bars-icon" aria-hidden="true">❚❚</span>
+                  <span class="hud-pause-label">PAUSE</span>
+                </button>
               </div>
             </div>
 
@@ -151,6 +157,38 @@
                 <span>◀ DRAG OR MOVE BUCKET ▶</span>
               </div>
             </div>
+
+            <!-- Game Pause Overlay -->
+            <div class="game-pause-overlay" id="game-pause-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Game Paused">
+              <div class="pause-card">
+                <div class="pause-kicker-badge" aria-hidden="true">
+                  <span class="pause-kicker-star">✦</span>
+                  <span class="pause-kicker-text">GAME PAUSED</span>
+                  <span class="pause-kicker-star">✦</span>
+                </div>
+                <div class="pause-icon-circle" aria-hidden="true">❚❚</div>
+                <h2 class="pause-title">PAUSED</h2>
+                <p class="pause-subtitle">Take a breather! Your feast is waiting.</p>
+                <div class="pause-stats-grid">
+                  <div class="pause-stat-chip">
+                    <span class="pause-stat-label">SCORE</span>
+                    <span class="pause-stat-value" id="pause-stat-score">0</span>
+                  </div>
+                  <div class="pause-stat-chip">
+                    <span class="pause-stat-label">COMBO</span>
+                    <span class="pause-stat-value" id="pause-stat-combo">x1</span>
+                  </div>
+                  <div class="pause-stat-chip">
+                    <span class="pause-stat-label">MISSES</span>
+                    <span class="pause-stat-value" id="pause-stat-misses">0/5</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-action btn-gold resume-game-btn" id="resume-game-btn" aria-label="Resume Game">
+                  <span class="resume-icon" aria-hidden="true">▶</span>
+                  <span>RESUME</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- VIEW 3: Results Interstitial Screen -->
@@ -179,9 +217,9 @@
                 </div>
                 <div class="reward-score-card" id="reward-score-card">
                   <span class="reward-score-label">FEAST ROUND SCORE</span>
-                  <!-- <div class="reward-score-val-wrap">
-                    <span class="reward-score-number" id="reward-score-number">0 / 100</span>
-                  </div> -->
+                  <div class="reward-score-val-wrap">
+                    <span class="reward-score-number" id="reward-score-number">0</span>
+                  </div>
                   <p class="reward-score-summary" id="reward-score-summary">Reach 100 points to unlock your reward!</p>
                 </div>
               </div>

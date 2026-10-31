@@ -28,6 +28,14 @@
   const hudComboEl = document.getElementById("hud-combo");
   const hudComboValEl = document.getElementById("hud-combo-val");
 
+  // Pause / Resume Controls & Overlay Elements
+  const hudPauseBtn = document.getElementById("hud-pause-btn");
+  const gamePauseOverlay = document.getElementById("game-pause-overlay");
+  const resumeGameBtn = document.getElementById("resume-game-btn");
+  const pauseStatScore = document.getElementById("pause-stat-score");
+  const pauseStatCombo = document.getElementById("pause-stat-combo");
+  const pauseStatMisses = document.getElementById("pause-stat-misses");
+
   // 3D Layered Bucket Elements
   const bucketRear = document.getElementById("bucket-rear");
   const bucketFront = document.getElementById("bucket-front");
@@ -289,7 +297,7 @@
         const finalScoreVal = (data.verifiedScore !== undefined) ? data.verifiedScore : numScore;
         score = finalScoreVal;
 
-        if (rewardScoreNumber) rewardScoreNumber.textContent = `${finalScoreVal} / 100`;
+        if (rewardScoreNumber) rewardScoreNumber.textContent = String(finalScoreVal);
         if (unlockScoreVal) unlockScoreVal.textContent = String(finalScoreVal);
 
         const rewardSummary = document.getElementById("reward-score-summary");
@@ -681,6 +689,8 @@
   let itemsSpawnedTotal = 0;
   let roundEvents = [];
   let isDevTestRound = false;
+  let isGamePaused = false;
+  let pauseStartTime = 0;
 
   // Scoring calculation helper
   function getCatchScoring(itemType) {
@@ -1247,7 +1257,7 @@
 
   // Main Game Loop (requestAnimationFrame) — Ends solely on 5 misses
   function gameLoop(now) {
-    if (gameState !== "playing") return;
+    if (gameState !== "playing" || isGamePaused) return;
 
     if (!lastFrameTime) lastFrameTime = now;
     const dt = Math.min(0.1, (now - lastFrameTime) / 1000);
@@ -1389,10 +1399,113 @@
     } catch (_) {}
   }
 
+  // =========================================================================
+  // GAME PAUSE & RESUME SYSTEM
+  // =========================================================================
+  function pauseGame() {
+    // Only allow pausing during active gameplay
+    if (gameState !== "playing" || isGamePaused) return;
+
+    isGamePaused = true;
+    pauseStartTime = performance.now();
+
+    // 1. Cancel active animation loop immediately
+    if (gameAnimId) {
+      cancelAnimationFrame(gameAnimId);
+      gameAnimId = null;
+    }
+
+    // 2. Stop dragging bucket
+    stopDraggingBucket();
+
+    // 3. Update Pause Overlay stats
+    if (pauseStatScore) {
+      pauseStatScore.textContent = String(score);
+    }
+    if (pauseStatCombo) {
+      pauseStatCombo.textContent = consecutiveCatches >= 5 ? "x2" : "x1";
+    }
+    if (pauseStatMisses) {
+      pauseStatMisses.textContent = `${missedCount}/${MAX_MISSES}`;
+    }
+
+    // 4. Reveal Pause Overlay
+    if (gamePauseOverlay) {
+      gamePauseOverlay.style.display = "flex";
+      gamePauseOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    // 5. Update HUD Pause Button state
+    if (hudPauseBtn) {
+      hudPauseBtn.classList.add("is-paused");
+      hudPauseBtn.setAttribute("aria-pressed", "true");
+    }
+
+    trackEvent("game_pause", { score, missedCount, combo: consecutiveCatches });
+  }
+
+  function resumeGame() {
+    // Only allow resuming if currently playing and paused
+    if (gameState !== "playing" || !isGamePaused) return;
+
+    // 1. Shift roundStartTime by paused duration to ensure fair session duration and event timestamps
+    if (pauseStartTime > 0) {
+      const pausedDuration = performance.now() - pauseStartTime;
+      if (pausedDuration > 0) {
+        roundStartTime += pausedDuration;
+      }
+    }
+    pauseStartTime = 0;
+    isGamePaused = false;
+
+    // 2. Set lastFrameTime to now so dt does not jump on the first resumed frame
+    lastFrameTime = performance.now();
+
+    // 3. Hide Pause Overlay
+    if (gamePauseOverlay) {
+      gamePauseOverlay.style.display = "none";
+      gamePauseOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    // 4. Reset HUD Pause Button state
+    if (hudPauseBtn) {
+      hudPauseBtn.classList.remove("is-paused");
+      hudPauseBtn.setAttribute("aria-pressed", "false");
+    }
+
+    // 5. Restart single animation loop
+    if (!gameAnimId) {
+      gameAnimId = requestAnimationFrame(gameLoop);
+    }
+
+    trackEvent("game_resume", { score, missedCount, combo: consecutiveCatches });
+  }
+
+  function togglePause() {
+    if (gameState !== "playing") return;
+    if (isGamePaused) {
+      resumeGame();
+    } else {
+      pauseGame();
+    }
+  }
+
   // Start / Restart Catch the Feast game
   function startGame() {
     stopDraggingBucket();
     updatePlayAreaRect();
+
+    // Reset any pause state
+    isGamePaused = false;
+    pauseStartTime = 0;
+    if (gamePauseOverlay) {
+      gamePauseOverlay.style.display = "none";
+      gamePauseOverlay.setAttribute("aria-hidden", "true");
+    }
+    if (hudPauseBtn) {
+      hudPauseBtn.classList.remove("is-paused");
+      hudPauseBtn.setAttribute("aria-pressed", "false");
+    }
 
     // Advance round identifier so any in-flight background submissions from previous rounds are discarded
     currentRoundId++;
@@ -1436,7 +1549,7 @@
     } catch (_) {}
 
     if (rewardScoreNumber) {
-      rewardScoreNumber.textContent = "0 / 100";
+      rewardScoreNumber.textContent = "0";
     }
     if (rewardScoreSummary) {
       rewardScoreSummary.textContent = "Reach 100 points to unlock your reward!";
@@ -1477,6 +1590,17 @@
   // End of Round: Triggered immediately when player reaches 5 missed food items
   function endGameLoss() {
     stopDraggingBucket();
+    isGamePaused = false;
+    pauseStartTime = 0;
+    if (gamePauseOverlay) {
+      gamePauseOverlay.style.display = "none";
+      gamePauseOverlay.setAttribute("aria-hidden", "true");
+    }
+    if (hudPauseBtn) {
+      hudPauseBtn.classList.remove("is-paused");
+      hudPauseBtn.setAttribute("aria-pressed", "false");
+    }
+
     if (gameState !== "playing") return;
     gameState = "revealed";
 
@@ -1507,11 +1631,11 @@
     if (interstitialScoreVal) interstitialScoreVal.textContent = String(finalScore);
     if (interstitialScoreDesc) interstitialScoreDesc.textContent = scoreSummaryText;
 
-    // 2. Update Reward Card Score Section with exact final score format: <score> / 100
+    // 2. Update Reward Card Score Section with exact final numeric score (without /100)
     if (rewardResultHeader) {
       rewardResultHeader.style.display = "";
     }
-    if (rewardScoreNumber) rewardScoreNumber.textContent = `${finalScore} / 100`;
+    if (rewardScoreNumber) rewardScoreNumber.textContent = String(finalScore);
 
     // Reset card class states
     if (rewardCard) {
@@ -1830,7 +1954,7 @@
   // Bucket Drag Event Listeners (Pointer Events for Touch & Mouse)
   if (gamePlayArea) {
     gamePlayArea.addEventListener("pointerdown", (event) => {
-      if (gameState !== "playing") return;
+      if (gameState !== "playing" || isGamePaused) return;
       event.preventDefault();
       updatePlayAreaRect();
       isDraggingBucket = true;
@@ -1854,7 +1978,7 @@
     }, { passive: false });
 
     gamePlayArea.addEventListener("pointermove", (event) => {
-      if (gameState !== "playing") return;
+      if (gameState !== "playing" || isGamePaused) return;
       if (activePointerId !== null && event.pointerId !== activePointerId) return;
       if (isDraggingBucket || event.pointerType === "mouse") {
         setBucketPosition(event.clientX, isDraggingBucket ? dragOffsetX : 0);
@@ -1867,7 +1991,7 @@
 
     // Window-level safety listeners in case pointer leaves or capture is dropped by browser
     window.addEventListener("pointermove", (event) => {
-      if (gameState !== "playing" || !isDraggingBucket) return;
+      if (gameState !== "playing" || isGamePaused || !isDraggingBucket) return;
       if (activePointerId !== null && event.pointerId !== activePointerId) return;
       setBucketPosition(event.clientX, dragOffsetX);
     }, { passive: true });
@@ -1877,7 +2001,7 @@
 
     // Keyboard Controls for Bucket (Accessibility: Left/Right Arrow Keys)
     window.addEventListener("keydown", (event) => {
-      if (gameState !== "playing") return;
+      if (gameState !== "playing" || isGamePaused) return;
       if (!cachedPlayAreaRect) updatePlayAreaRect();
       const rect = cachedPlayAreaRect || gamePlayArea.getBoundingClientRect();
       const metrics = getPlayfieldMetrics();
@@ -2008,14 +2132,38 @@
     });
   }
 
-  // Keyboard navigation for modal (ESC key to dismiss)
+  // Pause Button in HUD & Resume Button on Overlay
+  if (hudPauseBtn) {
+    hudPauseBtn.addEventListener("click", togglePause);
+  }
+
+  if (resumeGameBtn) {
+    resumeGameBtn.addEventListener("click", resumeGame);
+  }
+
+  // Keyboard navigation for modal (ESC key to dismiss) & Pause toggle (ESC or P)
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       if (leaderboardModal && leaderboardModal.classList.contains("is-open")) {
         closeLeaderboard();
+        return;
       }
       if (claimModal && claimModal.classList.contains("is-open")) {
         closeClaimModal();
+        return;
+      }
+      if (gameState === "playing") {
+        event.preventDefault();
+        togglePause();
+        return;
+      }
+    }
+    if (event.key === "p" || event.key === "P") {
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+      if (activeTag === "input" || activeTag === "textarea") return;
+      if (gameState === "playing") {
+        event.preventDefault();
+        togglePause();
       }
     }
   });
@@ -2365,6 +2513,9 @@
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden" && gameState === "playing") {
+      if (!isGamePaused) {
+        pauseGame();
+      }
       trackEvent("game_abandon", { score, missedCount });
     }
   });
@@ -2393,27 +2544,41 @@
   if (!restored) {
     switchView(viewIntro, "intro");
   }
-  // Development Testing Helper (Active only in local development / localhost or ?dev=true)
+
+  // Development Testing Helper (Active strictly on local development hostnames)
   const isLocalDev = Boolean(
     typeof window !== "undefined" &&
     (window.location.hostname === "localhost" ||
      window.location.hostname === "127.0.0.1" ||
+     window.location.hostname === "0.0.0.0" ||
+     window.location.hostname === "[::1]" ||
      window.location.hostname.startsWith("192.168.") ||
-     window.location.hostname.endsWith(".local") ||
-     window.location.search.includes("dev=true"))
+     window.location.hostname.endsWith(".local"))
   );
 
   function forceSpawnGoldenMandi() {
+    if (!isLocalDev) {
+      console.warn("Dev spawn actions are strictly disabled in production.");
+      return;
+    }
     if (gameState !== "playing") return;
     spawnFoodItem("golden-mandi");
   }
 
   function forceSpawnBomb() {
+    if (!isLocalDev) {
+      console.warn("Dev spawn actions are strictly disabled in production.");
+      return;
+    }
     if (gameState !== "playing") return;
     spawnFoodItem("bomb");
   }
 
   function setFeatures(newFeatures = {}) {
+    if (!isLocalDev) {
+      console.warn("Dynamic feature toggles are disabled in production.");
+      return;
+    }
     Object.assign(GAME_FEATURES, newFeatures);
     if (typeof window !== "undefined") {
       window.GAME_FEATURES = Object.assign({}, GAME_FEATURES);
@@ -2439,7 +2604,7 @@
 
   function testOfferUnlock(targetScore = 121) {
     if (!isLocalDev) {
-      console.warn("Dev score override is disabled outside development.");
+      console.warn("Dev score injection is strictly disabled outside local development.");
       return;
     }
     startGame();
@@ -2452,49 +2617,54 @@
     endGameLoss();
   }
 
-  // Wire up Dev Testing Panel if in local development
+  // Wire up Dev Testing Panel if in local development; completely remove from DOM in production
   const devTestPanel = document.getElementById("dev-test-panel");
-  if (devTestPanel && isLocalDev) {
-    devTestPanel.style.display = "flex";
-    syncDevCheckboxes();
+  if (devTestPanel) {
+    if (isLocalDev) {
+      devTestPanel.style.display = "flex";
+      syncDevCheckboxes();
 
-    // Checkboxes
-    const cbGm = document.getElementById("dev-toggle-gm");
-    if (cbGm) cbGm.addEventListener("change", (e) => setFeatures({ goldenMandi: e.target.checked }));
-    const cbCc = document.getElementById("dev-toggle-cc");
-    if (cbCc) cbCc.addEventListener("change", (e) => setFeatures({ comboCatch: e.target.checked }));
-    const cbFs = document.getElementById("dev-toggle-fs");
-    if (cbFs) cbFs.addEventListener("change", (e) => setFeatures({ floatingScores: e.target.checked }));
-    const cbBm = document.getElementById("dev-toggle-bm");
-    if (cbBm) cbBm.addEventListener("change", (e) => setFeatures({ bomb: e.target.checked }));
+      // Checkboxes
+      const cbGm = document.getElementById("dev-toggle-gm");
+      if (cbGm) cbGm.addEventListener("change", (e) => setFeatures({ goldenMandi: e.target.checked }));
+      const cbCc = document.getElementById("dev-toggle-cc");
+      if (cbCc) cbCc.addEventListener("change", (e) => setFeatures({ comboCatch: e.target.checked }));
+      const cbFs = document.getElementById("dev-toggle-fs");
+      if (cbFs) cbFs.addEventListener("change", (e) => setFeatures({ floatingScores: e.target.checked }));
+      const cbBm = document.getElementById("dev-toggle-bm");
+      if (cbBm) cbBm.addEventListener("change", (e) => setFeatures({ bomb: e.target.checked }));
 
-    // All ON / All OFF
-    const btnAllOn = document.getElementById("dev-btn-all-on");
-    if (btnAllOn) btnAllOn.addEventListener("click", () => setFeatures({ goldenMandi: true, comboCatch: true, floatingScores: true, bomb: true }));
-    const btnAllOff = document.getElementById("dev-btn-all-off");
-    if (btnAllOff) btnAllOff.addEventListener("click", () => setFeatures({ goldenMandi: false, comboCatch: false, floatingScores: false, bomb: false }));
+      // All ON / All OFF
+      const btnAllOn = document.getElementById("dev-btn-all-on");
+      if (btnAllOn) btnAllOn.addEventListener("click", () => setFeatures({ goldenMandi: true, comboCatch: true, floatingScores: true, bomb: true }));
+      const btnAllOff = document.getElementById("dev-btn-all-off");
+      if (btnAllOff) btnAllOff.addEventListener("click", () => setFeatures({ goldenMandi: false, comboCatch: false, floatingScores: false, bomb: false }));
 
-    // Spawns
-    const btnSpawnMandi = document.getElementById("dev-btn-spawn-mandi");
-    if (btnSpawnMandi) btnSpawnMandi.addEventListener("click", () => {
-      if (gameState !== "playing") startGame();
-      forceSpawnGoldenMandi();
-    });
-    const btnSpawnBomb = document.getElementById("dev-btn-spawn-bomb");
-    if (btnSpawnBomb) btnSpawnBomb.addEventListener("click", () => {
-      if (gameState !== "playing") startGame();
-      forceSpawnBomb();
-    });
+      // Spawns
+      const btnSpawnMandi = document.getElementById("dev-btn-spawn-mandi");
+      if (btnSpawnMandi) btnSpawnMandi.addEventListener("click", () => {
+        if (gameState !== "playing") startGame();
+        forceSpawnGoldenMandi();
+      });
+      const btnSpawnBomb = document.getElementById("dev-btn-spawn-bomb");
+      if (btnSpawnBomb) btnSpawnBomb.addEventListener("click", () => {
+        if (gameState !== "playing") startGame();
+        forceSpawnBomb();
+      });
 
-    // Score Simulation
-    const devBtn121 = document.getElementById("dev-btn-score-121");
-    if (devBtn121) devBtn121.addEventListener("click", () => testOfferUnlock(121));
-    const devBtn100 = document.getElementById("dev-btn-score-100");
-    if (devBtn100) devBtn100.addEventListener("click", () => testOfferUnlock(100));
-    const devBtn80 = document.getElementById("dev-btn-score-80");
-    if (devBtn80) devBtn80.addEventListener("click", () => testOfferUnlock(80));
-    const devBtnClose = document.getElementById("dev-btn-close");
-    if (devBtnClose) devBtnClose.addEventListener("click", () => { devTestPanel.style.display = "none"; });
+      // Score Simulation
+      const devBtn121 = document.getElementById("dev-btn-score-121");
+      if (devBtn121) devBtn121.addEventListener("click", () => testOfferUnlock(121));
+      const devBtn100 = document.getElementById("dev-btn-score-100");
+      if (devBtn100) devBtn100.addEventListener("click", () => testOfferUnlock(100));
+      const devBtn80 = document.getElementById("dev-btn-score-80");
+      if (devBtn80) devBtn80.addEventListener("click", () => testOfferUnlock(80));
+      const devBtnClose = document.getElementById("dev-btn-close");
+      if (devBtnClose) devBtnClose.addEventListener("click", () => { devTestPanel.style.display = "none"; });
+    } else {
+      // Production or non-local host: completely remove panel from DOM
+      devTestPanel.remove();
+    }
   }
 
   // Expose test & diagnostic hooks
@@ -2502,6 +2672,11 @@
     window.__soofiGame = {
       startGame,
       endGameLoss,
+      pauseGame,
+      resumeGame,
+      togglePause,
+      isPaused: () => isGamePaused,
+      isLocalDev: () => isLocalDev,
       submitScore,
       resetDemo,
       openClaimModal,
@@ -2522,6 +2697,7 @@
         foodCaughtCount,
         missedCount,
         consecutiveCatches,
+        isPaused: isGamePaused,
         currentGameSessionId,
         currentClaim,
         features: Object.assign({}, GAME_FEATURES)
